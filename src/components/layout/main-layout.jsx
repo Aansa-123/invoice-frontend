@@ -1,15 +1,15 @@
 import { useState } from "react"
 import { LogOut, Menu } from "lucide-react"
-import { Outlet } from "react-router-dom"
+import { Outlet, useNavigate } from "react-router-dom"
 import { Button } from "../ui/button.jsx"
 import Sidebar from "./sidebar.jsx"
 
 export default function MainLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const navigate = useNavigate()
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    window.location.reload()
+    navigate("/logout")
   }
 
   return (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import LoginPage from "./components/auth/login-page"
+import LogoutPage from "./components/auth/logout-page"
 import DashboardContent from "./components/dashboard/dashboard-content"
 import InvoicesPage from "./components/invoices/invoices-page"
 import ClientsPage from "./components/clients/clients-page"
@@ -35,12 +36,14 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <LoginPage setIsLoggedIn={setIsLoggedIn} />} />
+        <Route path="/logout" element={<LogoutPage />} />
         
         <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} isLoading={isLoading}><MainLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardContent />} />
           <Route path="/invoices" element={<InvoicesPage />} />
           <Route path="/clients" element={<ClientsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          
         </Route>
 
         <Route path="*" element={<NotFound />} />
