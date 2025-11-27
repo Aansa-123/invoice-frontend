@@ -1,13 +1,14 @@
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 
-export default function LogoutPage() {
+export default function LogoutPage({ setIsLoggedIn }) {
   const navigate = useNavigate()
 
   useEffect(() => {
     localStorage.removeItem("token")
+    setIsLoggedIn(false)
     navigate("/", { replace: true })
-  }, [navigate])
+  }, [navigate, setIsLoggedIn])
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">

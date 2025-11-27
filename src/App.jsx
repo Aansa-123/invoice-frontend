@@ -36,7 +36,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <LoginPage setIsLoggedIn={setIsLoggedIn} />} />
-        <Route path="/logout" element={<LogoutPage />} />
+        <Route path="/logout" element={<LogoutPage setIsLoggedIn={setIsLoggedIn} />} />
         
         <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} isLoading={isLoading}><MainLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardContent />} />
