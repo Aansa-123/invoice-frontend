@@ -12,9 +12,23 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(true)
 
-  const handleLogout = () => {
-    localStorage.removeItem("token")
-    window.location.reload()
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      
+      await fetch(`${import.meta.env.VITE_API_URL}/api/auth/logout`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      localStorage.removeItem("token")
+      window.location.href = "/"
+    }
   }
 
   return (
