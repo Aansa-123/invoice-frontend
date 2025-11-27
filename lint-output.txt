@@ -1,0 +1,90 @@
+
+> invoice-frontend@0.0.0 lint
+> eslint .
+
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\hooks\use-mobile.js
+   6:50  error    'boolean' is not defined                                                                                              no-undef
+  16:6   warning  React Hook React.useEffect has a missing dependency: 'setIsMobile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\App.jsx
+  14:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  12 |     const token = localStorage.getItem("token")
+  13 |     if (token) {
+> 14 |       setIsLoggedIn(true)
+     |       ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  15 |     }
+  16 |     setIsLoading(false)
+  17 |   }, [])  react-hooks/set-state-in-effect
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\auth\login-page.jsx
+  38:14  error  'err' is defined but never used  no-unused-vars
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\dashboard\stat-card.jsx
+  3:56  error  'Icon' is defined but never used  no-unused-vars
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\invoices\invoices-page.jsx
+  31:6  warning  React Hook useEffect has a missing dependency: 'filterInvoices'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\ui\button-group.jsx
+  68:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\ui\carousel.jsx
+  54:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  52 |   useEffect(() => {
+  53 |     if (!api) return
+> 54 |     onSelect(api)
+     |     ^^^^^^^^ Avoid calling setState() directly within an effect
+  55 |     api.on('reInit', onSelect)
+  56 |     api.on('select', onSelect)
+  57 |     return () => api.off('select', onSelect)  react-hooks/set-state-in-effect
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\ui\chart.jsx
+  43:55  error  '_' is defined but never used  no-unused-vars
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\ui\form.jsx
+  140:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\ui\input-group.jsx
+  1:10  error  'useMemo' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\ui\navigation-menu.jsx
+  134:3  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\ui\sidebar.jsx
+  405:51  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+  403 |
+  404 | function SidebarMenuSkeleton({ className, showIcon = false, ...props }) {
+> 405 |   const width = React.useMemo(() => `${Math.floor(Math.random() * 40) + 50}%`, [])
+      |                                                   ^^^^^^^^^^^^^ Cannot call impure function
+  406 |   return (
+  407 |     <div data-slot="sidebar-menu-skeleton" data-sidebar="menu-skeleton" className={cn('flex h-8 items-center gap-2 rounded-md px-2', className)} {...props}>
+  408 |       {showIcon && <Skeleton className="size-4 rounded-md" data-sidebar="menu-skeleton-icon" />}  react-hooks/purity
+  476:3   error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               react-refresh/only-export-components
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\ui\toggle.jsx
+  44:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+d:\Dawood-tech\invoice-management-system\frontend\invoice-frontend\src\components\ui\use-mobile.jsx
+   6:50  error    'boolean' is not defined                                                                                              no-undef
+  16:6   warning  React Hook React.useEffect has a missing dependency: 'setIsMobile'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+✖ 17 problems (14 errors, 3 warnings)
+
