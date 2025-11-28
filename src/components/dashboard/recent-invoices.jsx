@@ -104,11 +104,11 @@ export default function RecentInvoices() {
           <table className="w-full text-sm">
             <thead className="border-b border-border">
               <tr>
-                <th className="text-left py-2 text-muted-foreground font-medium">Invoice ID</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">Amount</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">Status</th>
-                <th className="text-left py-2 text-muted-foreground font-medium">Date</th>
-                <th className="text-right py-2 text-muted-foreground font-medium">Actions</th>
+                <th className="text-left py-2 text-muted-foreground font-bold">Invoice ID</th>
+                <th className="text-left py-2 text-muted-foreground font-bold">Amount</th>
+                <th className="text-left py-2 text-muted-foreground font-bold">Status</th>
+                <th className="text-left py-2 text-muted-foreground font-bold">Date</th>
+                <th className="text-right py-2 text-muted-foreground font-bold">Actions</th>
               </tr>
             </thead>
             <tbody>
