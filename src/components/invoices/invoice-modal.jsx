@@ -189,6 +189,13 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
               </button>
             </div>
 
+            <div className="mb-2 flex gap-3 text-xs font-semibold text-muted-foreground">
+              <div className="flex-1">Item name</div>
+              <div className="w-20">Qty</div>
+              <div className="w-28">Price</div>
+              <div className="w-10"></div>
+            </div>
+
             <div className="space-y-3">
               {formData.items.map((item, idx) => (
                 <div key={idx} className="flex gap-3">
@@ -246,8 +253,9 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
               <label className="text-sm font-medium text-foreground">Tax (%)</label>
               <Input
                 type="number"
-                value={formData.tax}
-                onChange={(e) => setFormData({ ...formData, tax: Number.parseFloat(e.target.value) || 0 })}
+                value={formData.tax === 0 ? "" : formData.tax}
+                onChange={(e) => setFormData({ ...formData, tax: e.target.value === "" ? 0 : Number.parseFloat(e.target.value) })}
+                placeholder="0"
                 className="mt-2"
               />
             </div>
@@ -255,8 +263,9 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
               <label className="text-sm font-medium text-foreground">Discount ($)</label>
               <Input
                 type="number"
-                value={formData.discount}
-                onChange={(e) => setFormData({ ...formData, discount: Number.parseFloat(e.target.value) || 0 })}
+                value={formData.discount === 0 ? "" : formData.discount}
+                onChange={(e) => setFormData({ ...formData, discount: e.target.value === "" ? 0 : Number.parseFloat(e.target.value) })}
+                placeholder="0"
                 className="mt-2"
               />
             </div>
