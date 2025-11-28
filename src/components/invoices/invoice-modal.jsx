@@ -213,10 +213,10 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
                   <input
                     type="number"
                     placeholder="Qty"
-                    value={item.quantity}
+                    value={item.quantity === 0 ? "" : item.quantity}
                     onChange={(e) => {
                       const newItems = [...formData.items]
-                      newItems[idx].quantity = Number.parseInt(e.target.value) || 0
+                      newItems[idx].quantity = e.target.value === "" ? 0 : Number.parseInt(e.target.value)
                       setFormData({ ...formData, items: newItems })
                     }}
                     className="w-20 p-2 border border-border rounded-lg bg-background text-foreground"
@@ -224,10 +224,10 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
                   <input
                     type="number"
                     placeholder="Price"
-                    value={item.price}
+                    value={item.price === 0 ? "" : item.price}
                     onChange={(e) => {
                       const newItems = [...formData.items]
-                      newItems[idx].price = Number.parseFloat(e.target.value) || 0
+                      newItems[idx].price = e.target.value === "" ? 0 : Number.parseFloat(e.target.value)
                       setFormData({ ...formData, items: newItems })
                     }}
                     className="w-28 p-2 border border-border rounded-lg bg-background text-foreground"
