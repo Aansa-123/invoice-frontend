@@ -9,7 +9,9 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, onInvoiceUp
     items: [],
     tax: 0,
     discount: 0,
+    invoiceDate: "",
     dueDate: "",
+    status: "Draft",
     notes: "",
   })
   const [loading, setLoading] = useState(false)
@@ -20,7 +22,9 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, onInvoiceUp
         items: invoice.items || [],
         tax: invoice.tax || 0,
         discount: invoice.discount || 0,
+        invoiceDate: invoice.invoiceDate?.split("T")[0] || "",
         dueDate: invoice.dueDate?.split("T")[0] || "",
+        status: invoice.status || "Draft",
         notes: invoice.notes || "",
       })
     }
@@ -28,17 +32,55 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, onInvoiceUp
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    // Frontend validation
+    if (!formData.dueDate || formData.dueDate.trim() === "") {
+      alert("Please select a due date")
+      return
+    }
+
+    const invDate = new Date(formData.invoiceDate || new Date())
+    const dueDate = new Date(formData.dueDate)
+    
+    // Reset hours to compare dates correctly
+    invDate.setHours(0, 0, 0, 0)
+    dueDate.setHours(0, 0, 0, 0)
+
+    if (dueDate < invDate) {
+      alert("Due date must be the same or later than the invoice date")
+      return
+    }
+
+    for (let i = 0; i < formData.items.length; i++) {
+      const item = formData.items[i]
+      if (!item.name || item.name.trim() === "") {
+        alert(`Please enter a name for item ${i + 1}`)
+        return
+      }
+      if (!item.quantity || item.quantity <= 0) {
+        alert(`Please enter a valid quantity for item ${i + 1}`)
+        return
+      }
+      if (item.price <= 0) {
+        alert(`Please enter a price greater than 0 for item ${i + 1}`)
+        return
+      }
+    }
+
     setLoading(true)
 
     try {
       const token = localStorage.getItem("token")
+      const submitData = {
+        ...formData,
+        status: "Pending",
+      }
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices/${invoice._id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       if (response.ok) {
@@ -169,15 +211,27 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, onInvoiceUp
             </div>
           </div>
 
-          <div>
-            <label className="text-sm font-medium text-foreground">Due Date</label>
-            <Input
-              type="date"
-              required
-              value={formData.dueDate}
-              onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              className="mt-2"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-foreground">Invoice Date</label>
+              <Input
+                type="date"
+                required
+                readOnly
+                value={formData.invoiceDate}
+                className="mt-2 bg-muted opacity-80 cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">Due Date</label>
+              <Input
+                type="date"
+                required
+                value={formData.dueDate}
+                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                className="mt-2"
+              />
+            </div>
           </div>
 
           <div>

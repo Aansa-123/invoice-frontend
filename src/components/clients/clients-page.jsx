@@ -2,13 +2,18 @@ import { useState, useEffect } from "react"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { Plus, Search, Edit, Trash2 } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Eye, FileText } from "lucide-react"
 import ClientModal from "./client-modal"
+import ViewClientModal from "./ViewClientModal"
+import { useNavigate } from "react-router-dom"
 
-export default function ClientsPage() {
+export default function ClientsPage({ userRole }) {
+  const navigate = useNavigate()
   const [clients, setClients] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [selectedClient, setSelectedClient] = useState(null)
   const [editingClient, setEditingClient] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -65,16 +70,18 @@ export default function ClientsPage() {
           <h1 className="text-3xl font-bold text-foreground">Clients</h1>
           <p className="text-muted-foreground mt-1">Manage your client information</p>
         </div>
-        <Button
-          onClick={() => {
-            setEditingClient(null)
-            setIsModalOpen(true)
-          }}
-          className="bg-primary hover:bg-primary/90 gap-2"
-        >
-          <Plus size={18} />
-          Add Client
-        </Button>
+        {userRole !== "Viewer" && (
+          <Button
+            onClick={() => {
+              setEditingClient(null)
+              setIsModalOpen(true)
+            }}
+            className="bg-primary hover:bg-primary/90 gap-2"
+          >
+            <Plus size={18} />
+            Add Client
+          </Button>
+        )}
       </div>
 
       {/* Search */}
@@ -90,7 +97,7 @@ export default function ClientsPage() {
         </div>
       </Card>
 
-      {/* Clients List */}
+      {/* Clients Table */}
       <Card className="p-6">
         {loading ? (
           <div className="flex items-center justify-center py-12">
@@ -101,36 +108,77 @@ export default function ClientsPage() {
             <p className="text-muted-foreground">No clients found</p>
           </div>
         ) : (
-          <div className="grid gap-4">
-            {filteredClients.map((client) => (
-              <div key={client._id} className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">{client.name}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{client.email}</p>
-                    <p className="text-sm text-muted-foreground">{client.phone}</p>
-                    <p className="text-sm text-muted-foreground mt-2">{client.address}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => {
-                        setEditingClient(client)
-                        setIsModalOpen(true)
-                      }}
-                      className="p-2 hover:bg-primary/10 text-primary rounded-lg"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(client._id)}
-                      className="p-2 hover:bg-destructive/10 text-destructive rounded-lg"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b border-border text-muted-foreground font-semibold">
+                <tr>
+                  <th className="text-left py-3 px-4">Name</th>
+                  <th className="text-left py-3 px-4">Email</th>
+                  <th className="text-left py-3 px-4">Phone</th>
+                  <th className="text-left py-3 px-4">Total Invoices</th>
+                  <th className="text-right py-3 px-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredClients.map((client) => (
+                  <tr key={client._id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                    <td className="py-3 px-4 text-foreground font-medium">{client.name}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{client.email}</td>
+                    <td className="py-3 px-4 text-muted-foreground">{client.phone}</td>
+                    <td className="py-3 px-4 text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <FileText size={14} />
+                        {client.totalInvoices || 0}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-end gap-2">
+                        {userRole !== "Viewer" && (
+                          <button
+                            title="Create Invoice"
+                            onClick={() => navigate("/invoices", { state: { clientName: client.name } })}
+                            className="p-1.5 hover:bg-primary/10 text-primary rounded-md"
+                          >
+                            <Plus size={18} />
+                          </button>
+                        )}
+                        <button
+                          title="View Details"
+                          onClick={() => {
+                            setSelectedClient(client)
+                            setIsViewModalOpen(true)
+                          }}
+                          className="p-1.5 hover:bg-muted text-foreground rounded-md"
+                        >
+                          <Eye size={18} />
+                        </button>
+                        {userRole !== "Viewer" && (
+                          <button
+                            title="Edit Client"
+                            onClick={() => {
+                              setEditingClient(client)
+                              setIsModalOpen(true)
+                            }}
+                            className="p-1.5 hover:bg-muted text-foreground rounded-md"
+                          >
+                            <Edit size={18} />
+                          </button>
+                        )}
+                        {(userRole === "Owner" || userRole === "Admin") && (
+                          <button
+                            title="Delete Client"
+                            onClick={() => handleDelete(client._id)}
+                            className="p-1.5 hover:bg-destructive/10 text-destructive rounded-md"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </Card>
@@ -143,6 +191,12 @@ export default function ClientsPage() {
         }}
         onClientSaved={fetchClients}
         editingClient={editingClient}
+      />
+
+      <ViewClientModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        client={selectedClient}
       />
     </div>
   )

@@ -4,7 +4,7 @@ import { Outlet, useNavigate } from "react-router-dom"
 import { Button } from "../ui/button.jsx"
 import Sidebar from "./sidebar.jsx"
 
-export default function MainLayout() {
+export default function MainLayout({ userRole }) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const navigate = useNavigate()
 
@@ -17,6 +17,7 @@ export default function MainLayout() {
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
+        userRole={userRole}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">

@@ -4,12 +4,13 @@ import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { X, Plus, Trash2 } from "lucide-react"
 
-export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
+export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated, initialClientName }) {
   const [formData, setFormData] = useState({
     clientId: "",
     items: [{ name: "", quantity: 1, price: 0 }],
     tax: 0,
     discount: 0,
+    invoiceDate: new Date().toISOString().split('T')[0],
     dueDate: "",
     notes: "",
   })
@@ -42,6 +43,14 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
       if (response.ok) {
         const data = await response.json()
         setClients(data.data)
+        
+        // Pre-select client if initialClientName is provided
+        if (initialClientName) {
+          const client = data.data.find(c => c.name === initialClientName)
+          if (client) {
+            setFormData(prev => ({ ...prev, clientId: client._id }))
+          }
+        }
       }
     } catch (error) {
       console.error("Failed to fetch clients:", error)
@@ -64,6 +73,18 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
       return
     }
 
+    const invDate = new Date(formData.invoiceDate)
+    const dueDate = new Date(formData.dueDate)
+    
+    // Reset hours to compare dates correctly
+    invDate.setHours(0, 0, 0, 0)
+    dueDate.setHours(0, 0, 0, 0)
+
+    if (dueDate < invDate) {
+      alert("Due date must be the same or later than the invoice date")
+      return
+    }
+
     const validItems = getValidItems()
     if (validItems.length === 0) {
       alert("Please add at least one item with a name, quantity, and price")
@@ -81,8 +102,8 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
         alert(`Please enter a valid quantity for item ${i + 1}`)
         return
       }
-      if (item.price < 0) {
-        alert(`Please enter a valid price for item ${i + 1}`)
+      if (item.price <= 0) {
+        alert(`Please enter a price greater than 0 for item ${i + 1}`)
         return
       }
     }
@@ -93,6 +114,7 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
       const token = localStorage.getItem("token")
       const submitData = {
         ...formData,
+        status: "Pending",
         items: validItems,
       }
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices`, {
@@ -114,6 +136,7 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
           items: [{ name: "", quantity: 1, price: 0 }],
           tax: 0,
           discount: 0,
+          invoiceDate: new Date().toISOString().split('T')[0],
           dueDate: "",
           notes: "",
         })
@@ -190,15 +213,16 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
             </div>
 
             <div className="mb-2 flex gap-3 text-xs font-semibold text-muted-foreground">
-              <div className="flex-1">Item name</div>
+              <div className="flex-[2]">Item name</div>
               <div className="w-20">Qty</div>
               <div className="w-28">Price</div>
+              <div className="w-24">Total</div>
               <div className="w-10"></div>
             </div>
 
             <div className="space-y-3">
               {formData.items.map((item, idx) => (
-                <div key={idx} className="flex gap-3">
+                <div key={idx} className="flex gap-3 items-center">
                   <input
                     type="text"
                     placeholder="Item name"
@@ -208,7 +232,7 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
                       newItems[idx].name = e.target.value
                       setFormData({ ...formData, items: newItems })
                     }}
-                    className="flex-1 p-2 border border-border rounded-lg bg-background text-foreground"
+                    className="flex-[2] p-2 border border-border rounded-lg bg-background text-foreground"
                   />
                   <input
                     type="number"
@@ -232,6 +256,9 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
                     }}
                     className="w-28 p-2 border border-border rounded-lg bg-background text-foreground"
                   />
+                  <div className="w-24 p-2 text-foreground font-medium">
+                    ${(item.quantity * item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </div>
                   <button
                     type="button"
                     onClick={() => {
@@ -271,16 +298,28 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated }) {
             </div>
           </div>
 
-          {/* Due Date */}
-          <div>
-            <label className="text-sm font-medium text-foreground">Due Date</label>
-            <Input
-              type="date"
-              required
-              value={formData.dueDate}
-              onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              className="mt-2"
-            />
+          {/* Invoice Date & Due Date */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-foreground">Invoice Date</label>
+              <Input
+                type="date"
+                required
+                readOnly
+                value={formData.invoiceDate}
+                className="mt-2 bg-muted opacity-80 cursor-not-allowed"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">Due Date</label>
+              <Input
+                type="date"
+                required
+                value={formData.dueDate}
+                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                className="mt-2"
+              />
+            </div>
           </div>
 
           {/* Notes */}

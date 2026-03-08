@@ -3,19 +3,25 @@
 import { useEffect, useState } from "react"
 import { Card } from "../ui/card"
 import { Badge } from "../ui/badge"
-import { MoreVertical, Edit2, Trash2, CheckCircle, Eye } from "lucide-react"
-import StatusModal from "../invoices/status-modal"
+import { MoreVertical, Edit2, Trash2, Eye, Send, CreditCard, Download } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu"
 import EditInvoiceModal from "../invoices/edit-invoice-modal"
 import InvoicePreviewModal from "../invoices/invoice-preview-modal"
+import PaymentModal from "../payments/payment-modal"
 
 export default function RecentInvoices() {
   const [invoices, setInvoices] = useState([])
   const [loading, setLoading] = useState(true)
-  const [statusModalOpen, setStatusModalOpen] = useState(false)
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState(null)
-  const [openMenuId, setOpenMenuId] = useState(null)
 
   useEffect(() => {
     fetchRecentInvoices()
@@ -64,34 +70,71 @@ export default function RecentInvoices() {
 
       if (response.ok) {
         setInvoices(invoices.filter((inv) => inv._id !== invoiceId))
-        setOpenMenuId(null)
       }
     } catch (error) {
       console.error("Failed to delete invoice:", error)
     }
   }
 
-  const handleStatusClick = (invoice) => {
+  const handleRecordPaymentClick = (invoice) => {
     setSelectedInvoice(invoice)
-    setStatusModalOpen(true)
-    setOpenMenuId(null)
+    setPaymentModalOpen(true)
+  }
+
+  const handleSendClick = async (invoice) => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices/${invoice._id}/send`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (response.ok) {
+        fetchRecentInvoices()
+      } else {
+        const data = await response.json()
+        alert(data.error || "Failed to send invoice")
+      }
+    } catch (error) {
+      console.error("Failed to send invoice:", error)
+    }
   }
 
   const handleEditClick = (invoice) => {
     setSelectedInvoice(invoice)
     setEditModalOpen(true)
-    setOpenMenuId(null)
   }
 
   const handlePreviewClick = (invoice) => {
     setSelectedInvoice(invoice)
     setPreviewModalOpen(true)
-    setOpenMenuId(null)
+  }
+
+  const handleDownloadPDF = async (invoiceId) => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices/${invoiceId}/pdf`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement("a")
+        link.href = url
+        link.download = `invoice-${invoiceId}.pdf`
+        link.click()
+      }
+    } catch (error) {
+      console.error("Failed to download PDF:", error)
+    }
   }
 
   return (
     <Card className="p-6">
-      <h2 className="text-lg font-semibold text-foreground mb-4">Recent Invoices</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-foreground">Recent Invoices</h2>
+      </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-8">
@@ -102,63 +145,81 @@ export default function RecentInvoices() {
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-border">
+            <thead className="sticky top-0 bg-card z-20 border-b border-border">
               <tr>
-                <th className="text-left py-2 text-muted-foreground font-bold">Invoice ID</th>
-                <th className="text-left py-2 text-muted-foreground font-bold">Amount</th>
-                <th className="text-left py-2 text-muted-foreground font-bold">Status</th>
-                <th className="text-left py-2 text-muted-foreground font-bold">Date</th>
-                <th className="text-right py-2 text-muted-foreground font-bold">Actions</th>
+                <th className="text-left py-3 px-2 text-muted-foreground font-semibold">Invoice Number</th>
+                <th className="text-left py-3 px-2 text-muted-foreground font-semibold">Client</th>
+                <th className="text-left py-3 px-2 text-muted-foreground font-semibold">Amount</th>
+                <th className="text-left py-3 px-2 text-muted-foreground font-semibold">Status</th>
+                <th className="text-left py-3 px-2 text-muted-foreground font-semibold">Date</th>
+                <th className="text-right py-3 px-2 text-muted-foreground font-semibold">Actions</th>
               </tr>
             </thead>
             <tbody>
               {invoices.map((invoice) => (
-                <tr key={invoice._id} className="border-b border-border hover:bg-accent/20">
-                  <td className="py-3 text-foreground font-medium">{invoice.invoiceNumber}</td>
-                  <td className="py-3 text-foreground">${invoice.total?.toLocaleString()}</td>
-                  <td className="py-3">
+                <tr 
+                  key={invoice._id} 
+                  className="border-b border-border hover:bg-muted/50 transition-colors cursor-pointer"
+                  onClick={() => handlePreviewClick(invoice)}
+                >
+                  <td className="py-3 px-2 text-foreground font-medium">{invoice.invoiceNumber}</td>
+                  <td className="py-3 px-2 text-foreground">{invoice.clientId?.name || "N/A"}</td>
+                  <td className="py-3 px-2 text-foreground font-semibold">${invoice.total?.toLocaleString()}</td>
+                  <td className="py-3 px-2">
                     <Badge className={getStatusColor(invoice.status)}>{invoice.status}</Badge>
                   </td>
-                  <td className="py-3 text-muted-foreground">{new Date(invoice.invoiceDate).toLocaleDateString()}</td>
-                  <td className="py-3 text-right relative">
-                    <button
-                      onClick={() => setOpenMenuId(openMenuId === invoice._id ? null : invoice._id)}
-                      className="p-1 hover:bg-muted rounded inline-flex"
-                    >
-                      <MoreVertical size={16} />
-                    </button>
-                    {openMenuId === invoice._id && (
-                      <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-10 min-w-max">
-                        <button
-                          onClick={() => handlePreviewClick(invoice)}
-                          className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center gap-2 border-b border-border"
-                        >
-                          <Eye size={16} />
-                          Preview
-                        </button>
-                        <button
-                          onClick={() => handleStatusClick(invoice)}
-                          className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center gap-2 border-b border-border"
-                        >
-                          <CheckCircle size={16} />
-                          Update Status
-                        </button>
-                        <button
-                          onClick={() => handleEditClick(invoice)}
-                          className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted flex items-center gap-2 border-b border-border"
-                        >
-                          <Edit2 size={16} />
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDeleteInvoice(invoice._id)}
-                          className="w-full text-left px-4 py-2 text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
-                        >
-                          <Trash2 size={16} />
-                          Delete
-                        </button>
-                      </div>
-                    )}
+                  <td className="py-3 px-2 text-muted-foreground">{new Date(invoice.invoiceDate || invoice.createdAt).toLocaleDateString()}</td>
+                  <td className="py-3 px-2 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDownloadPDF(invoice._id)
+                        }}
+                        title="Download PDF"
+                        className="p-1 hover:bg-muted rounded text-primary transition-colors"
+                      >
+                        <Download size={16} />
+                      </button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-1 hover:bg-muted rounded inline-flex transition-colors"
+                          >
+                            <MoreVertical size={16} />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem onClick={() => handlePreviewClick(invoice)}>
+                            <Eye size={16} className="mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditClick(invoice)}>
+                            <Edit2 size={16} className="mr-2" />
+                            Edit Invoice
+                          </DropdownMenuItem>
+                          
+                          {invoice.status !== "Paid" && (
+                            <DropdownMenuItem onClick={() => handleRecordPaymentClick(invoice)}>
+                              <CreditCard size={16} className="mr-2" />
+                              Record Payment
+                            </DropdownMenuItem>
+                          )}
+
+                          <DropdownMenuSeparator />
+                          
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => handleDeleteInvoice(invoice._id)}
+                          >
+                            <Trash2 size={16} className="mr-2" />
+                            Delete Invoice
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -167,11 +228,11 @@ export default function RecentInvoices() {
         </div>
       )}
 
-      <StatusModal
-        isOpen={statusModalOpen}
-        onClose={() => setStatusModalOpen(false)}
-        invoice={selectedInvoice}
-        onStatusUpdated={fetchRecentInvoices}
+      <PaymentModal
+        isOpen={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        initialInvoice={selectedInvoice}
+        onPaymentRecorded={fetchRecentInvoices}
       />
 
       <EditInvoiceModal

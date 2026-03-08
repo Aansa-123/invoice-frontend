@@ -3,7 +3,7 @@ import { Button } from "../ui/button"
 import { Card } from "../ui/card"
 import { Input } from "../ui/input"
 
-export default function LoginPage({ setIsLoggedIn }) {
+export default function LoginPage({ setIsLoggedIn, setHasOrg, setUserEmail, setUserRole }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isSignUp, setIsSignUp] = useState(false)
@@ -29,11 +29,14 @@ export default function LoginPage({ setIsLoggedIn }) {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.message || "Authentication failed")
+        setError(data.message || data.error || "Authentication failed")
         return
       }
 
       localStorage.setItem("token", data.token)
+      setHasOrg(!!data.user?.currentOrganization)
+      setUserEmail(data.user?.email || "")
+      setUserRole(data.user?.role || "Owner")
       setIsLoggedIn(true)
     } catch (err) {
       setError("Connection error. Make sure backend is running.")

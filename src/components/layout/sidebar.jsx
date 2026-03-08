@@ -1,21 +1,32 @@
 
 import { useNavigate, useLocation } from "react-router-dom"
-import { LayoutDashboard, FileText, Users, Settings, X } from "lucide-react"
+import { LayoutDashboard, FileText, Users, Settings, X, CreditCard, BarChart3, Users2, History } from "lucide-react"
 
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { id: "invoices", label: "Invoices", icon: FileText, path: "/invoices" },
   { id: "clients", label: "Clients", icon: Users, path: "/clients" },
+  { id: "payments", label: "Payments", icon: CreditCard, path: "/payments" },
+  { id: "reports", label: "Reports", icon: BarChart3, path: "/reports" },
+  { id: "team", label: "Team", icon: Users2, path: "/team" },
+  { id: "history", label: "History", icon: History, path: "/history" },
   { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
 ]
 
-export default function Sidebar({ isOpen, onToggle }) {
+export default function Sidebar({ isOpen, onToggle, userRole }) {
   const navigate = useNavigate()
   const location = useLocation()
 
   const getIsActive = (path) => {
     return location.pathname === path
   }
+
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.id === "team" || item.id === "settings") {
+      return userRole === "Owner" || userRole === "Admin"
+    }
+    return true
+  })
 
   return (
     <>
@@ -41,7 +52,7 @@ export default function Sidebar({ isOpen, onToggle }) {
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          {menuItems.map((item) => {
+          {filteredMenuItems.map((item) => {
             const Icon = item.icon
             const isActive = getIsActive(item.path)
 

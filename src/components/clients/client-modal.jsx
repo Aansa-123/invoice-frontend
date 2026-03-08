@@ -96,6 +96,7 @@ export default function ClientModal({ isOpen, onClose, onClientSaved, editingCli
           <div>
             <label className="text-sm font-medium text-foreground">Phone</label>
             <Input
+              required
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               className="mt-2"
@@ -106,6 +107,7 @@ export default function ClientModal({ isOpen, onClose, onClientSaved, editingCli
           <div>
             <label className="text-sm font-medium text-foreground">Address</label>
             <Input
+              required
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               className="mt-2"

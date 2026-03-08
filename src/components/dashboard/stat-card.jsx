@@ -8,7 +8,7 @@ export default function StatCard({ title, value, icon: Icon, color }) {
   }
 
   return (
-    <Card className="p-6 hover:shadow-md transition-shadow">
+    <Card className="p-6 hover:shadow-md transition-shadow border border-gray-300 dark:border-gray-700">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-muted-foreground font-medium">{title}</p>

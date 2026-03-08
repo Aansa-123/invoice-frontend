@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import { FileText, DollarSign, Clock, CheckCircle } from "lucide-react"
-import StatCard from "./stat-card"
+import Overview from "./overview"
 import RecentInvoices from "./recent-invoices"
 
 export default function DashboardContent() {
@@ -15,6 +15,8 @@ export default function DashboardContent() {
     pendingInvoices: 0,
     overdueInvoices: 0,
     totalRevenue: 0,
+    dailyRevenue: [],
+    dailyInvoices: [],
   })
   const [loading, setLoading] = useState(true)
 
@@ -25,17 +27,69 @@ export default function DashboardContent() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices`, {
+      
+      // Fetch invoices
+      const invResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
-      if (response.ok) {
-        const response_data = await response.json()
-        const invoices = response_data.data
+      // Fetch team to get names for "per person" stats if needed
+      const teamResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/team`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (invResponse.ok) {
+        const invData = await invResponse.json()
+        const invoices = invData.data
+        
+        let team = []
+        if (teamResponse.ok) {
+          const teamData = await teamResponse.json()
+          team = teamData.data
+        }
+
         const paid = invoices.filter((i) => i.status === "Paid").length
         const pending = invoices.filter((i) => i.status === "Pending").length
         const overdue = invoices.filter((i) => i.status === "Overdue").length
         const revenue = invoices.filter((i) => i.status === "Paid").reduce((sum, i) => sum + (i.total || 0), 0)
+
+        // Calculate last 10 days stats
+        const dailyRevenue = []
+        
+        const now = new Date()
+        for (let i = 9; i >= 0; i--) {
+          const date = new Date(now)
+          date.setDate(date.getDate() - i)
+          const dateStr = date.toISOString().split('T')[0]
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'short' })
+
+          const dayInvoices = invoices.filter(inv => {
+            const invDate = new Date(inv.invoiceDate || inv.createdAt).toISOString().split('T')[0]
+            return invDate === dateStr
+          })
+
+          const dayAmount = dayInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
+          
+          // Group day invoices by client
+          const clientGroups = {}
+          dayInvoices.forEach(inv => {
+            const clientName = inv.clientId?.name || "Unknown Client"
+            if (!clientGroups[clientName]) clientGroups[clientName] = 0
+            clientGroups[clientName]++
+          })
+
+          const clients = Object.entries(clientGroups).map(([name, count]) => ({
+            name,
+            invoiceCount: count
+          }))
+          
+          dailyRevenue.push({ 
+            name: dayName, 
+            value: dayAmount, 
+            date: dateStr,
+            clients: clients
+          })
+        }
 
         setStats({
           totalInvoices: invoices.length,
@@ -43,6 +97,7 @@ export default function DashboardContent() {
           pendingInvoices: pending,
           overdueInvoices: overdue,
           totalRevenue: revenue,
+          dailyRevenue: dailyRevenue,
         })
       }
     } catch (error) {
@@ -62,52 +117,11 @@ export default function DashboardContent() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Welcome back</h1>
-        <p className="text-muted-foreground">Here's your invoice overview</p>
-      </div>
+      {/* Overview Charts Section */}
+      <Overview stats={stats} />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Invoices" value={stats.totalInvoices} icon={FileText} color="primary" />
-        <StatCard title="Paid Invoices" value={stats.paidInvoices} icon={CheckCircle} color="accent" />
-        <StatCard title="Pending" value={stats.pendingInvoices} icon={Clock} color="accent" />
-        <StatCard
-          title="Total Revenue"
-          value={`$${stats.totalRevenue.toLocaleString()}`}
-          icon={DollarSign}
-          color="primary"
-        />
-      </div>
-
-      {/* Recent Invoices */}
+      {/* Invoices List Section */}
       <RecentInvoices />
-
-      {/* Quick Actions */}
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h2>
-        These are two functions you can do quickly:
-        <br />
-        1. Create a new invoice to bill your clients.
-        <br />
-        2. Add a new client to your client list.
-        <div className="mt-4" />
-        <div className="flex flex-wrap gap-3">
-          <Button
-            className="bg-primary hover:bg-primary/90"
-            onClick={() => navigate("/invoices")}
-          >
-            Create New Invoice
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/clients")}
-          >
-            Add Client
-          </Button>
-        </div>
-      </Card>
     </div>
   )
 }
