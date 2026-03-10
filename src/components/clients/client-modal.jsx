@@ -4,7 +4,7 @@ import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { X } from "lucide-react"
 
-export default function ClientModal({ isOpen, onClose, onClientSaved, editingClient }) {
+export default function ClientModal({ isOpen, onClose, onClientSaved, editingClient, setShowUpgradeModal, setUpgradeMessage }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -49,6 +49,14 @@ export default function ClientModal({ isOpen, onClose, onClientSaved, editingCli
       if (response.ok) {
         onClientSaved()
         onClose()
+      } else if (response.status === 403) {
+        const data = await response.json()
+        setUpgradeMessage(data.error)
+        onClose()
+        setShowUpgradeModal(true)
+      } else {
+        const data = await response.json()
+        alert(data.error || "Failed to save client")
       }
     } catch (error) {
       console.error("Failed to save client:", error)

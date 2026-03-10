@@ -4,7 +4,14 @@ import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { X, Plus, Trash2 } from "lucide-react"
 
-export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated, initialClientName }) {
+export default function InvoiceModal({ 
+  isOpen, 
+  onClose, 
+  onInvoiceCreated, 
+  initialClientName,
+  setShowUpgradeModal,
+  setUpgradeMessage 
+}) {
   const [formData, setFormData] = useState({
     clientId: "",
     items: [{ name: "", quantity: 1, price: 0 }],
@@ -140,6 +147,11 @@ export default function InvoiceModal({ isOpen, onClose, onInvoiceCreated, initia
           dueDate: "",
           notes: "",
         })
+      } else if (response.status === 403) {
+        // Handle plan limit exceeded
+        onClose()
+        if (setUpgradeMessage) setUpgradeMessage(data.error || "You've reached your daily invoice limit.")
+        if (setShowUpgradeModal) setShowUpgradeModal(true)
       } else {
         // Show error message to user
         alert(`Error: ${data.error || 'Failed to create invoice'}`)

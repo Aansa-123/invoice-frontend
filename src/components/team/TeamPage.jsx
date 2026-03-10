@@ -1,22 +1,30 @@
 
-import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import { Badge } from "../ui/badge"
-import { Plus, UserPlus, Trash2, Shield, User, UserX, UserCheck, Edit2 } from "lucide-react"
+import { Plus, UserPlus, Trash2, Shield, User, UserX, UserCheck, Edit2, Lock } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog"
 import InviteMemberModal from "./invite-member-modal"
 import EditMemberModal from "./edit-member-modal"
 
-export default function TeamPage() {
+export default function TeamPage({ userPlan = "Free" }) {
+  const navigate = useNavigate()
   const [team, setTeam] = useState([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [selectedMember, setSelectedMember] = useState(null)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(userPlan === "Free")
 
   useEffect(() => {
-    fetchTeam()
-  }, [])
+    if (userPlan !== "Free") {
+      fetchTeam()
+    } else {
+      setLoading(false)
+      setShowUpgradeModal(true)
+    }
+  }, [userPlan])
 
   const fetchTeam = async () => {
     try {
@@ -28,6 +36,11 @@ export default function TeamPage() {
       if (response.ok) {
         const result = await response.json()
         setTeam(result.data)
+      } else {
+        const result = await response.json()
+        if (result.upgradeRequired) {
+          setShowUpgradeModal(true)
+        }
       }
     } catch (error) {
       console.error("Failed to fetch team:", error)
@@ -203,6 +216,43 @@ export default function TeamPage() {
         member={selectedMember}
         onMemberUpdated={fetchTeam}
       />
+
+      <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <Lock className="text-amber-600 dark:text-amber-400" size={24} />
+            </div>
+            <DialogTitle className="text-center text-xl font-bold">Upgrade Required</DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-4 space-y-3">
+            <p className="text-muted-foreground">
+              Team management is not available in the Free Plan.
+            </p>
+            <p className="text-sm font-medium">
+              Upgrade your plan to invite team members and collaborate.
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowUpgradeModal(false)
+                navigate("/dashboard")
+              }}
+              className="w-full"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => navigate("/subscription")}
+              className="w-full bg-primary hover:bg-primary/90 font-bold"
+            >
+              Upgrade Plan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

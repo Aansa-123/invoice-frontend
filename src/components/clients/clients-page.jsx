@@ -2,10 +2,11 @@ import { useState, useEffect } from "react"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { Plus, Search, Edit, Trash2, Eye, FileText } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Eye, FileText, Lock } from "lucide-react"
 import ClientModal from "./client-modal"
 import ViewClientModal from "./ViewClientModal"
 import { useNavigate } from "react-router-dom"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog"
 
 export default function ClientsPage({ userRole }) {
   const navigate = useNavigate()
@@ -16,6 +17,8 @@ export default function ClientsPage({ userRole }) {
   const [selectedClient, setSelectedClient] = useState(null)
   const [editingClient, setEditingClient] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [upgradeMessage, setUpgradeMessage] = useState("")
 
   useEffect(() => {
     fetchClients()
@@ -191,6 +194,8 @@ export default function ClientsPage({ userRole }) {
         }}
         onClientSaved={fetchClients}
         editingClient={editingClient}
+        setShowUpgradeModal={setShowUpgradeModal}
+        setUpgradeMessage={setUpgradeMessage}
       />
 
       <ViewClientModal
@@ -198,6 +203,41 @@ export default function ClientsPage({ userRole }) {
         onClose={() => setIsViewModalOpen(false)}
         client={selectedClient}
       />
+
+      {/* Upgrade Required Modal */}
+      <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <Lock className="text-amber-600 dark:text-amber-400" size={24} />
+            </div>
+            <DialogTitle className="text-center text-xl font-bold">Upgrade Required</DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-4 space-y-3">
+            <p className="text-muted-foreground">
+              {upgradeMessage || "Daily limit reached for your current plan."}
+            </p>
+            <p className="text-sm font-medium">
+              Upgrade your plan to unlock unlimited clients and invoices.
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowUpgradeModal(false)}
+              className="w-full"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => navigate("/subscription")}
+              className="w-full bg-primary hover:bg-primary/90 font-bold"
+            >
+              Upgrade Now
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

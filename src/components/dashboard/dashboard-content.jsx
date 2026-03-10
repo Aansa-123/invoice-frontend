@@ -3,7 +3,8 @@ import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
-import { FileText, DollarSign, Clock, CheckCircle } from "lucide-react"
+import { FileText, DollarSign, Clock, CheckCircle, ShieldAlert, Building2, RefreshCw } from "lucide-react"
+import { toast } from "sonner"
 import Overview from "./overview"
 import RecentInvoices from "./recent-invoices"
 
@@ -19,6 +20,7 @@ export default function DashboardContent() {
     dailyInvoices: [],
   })
   const [loading, setLoading] = useState(true)
+  const [pendingOrg, setPendingOrg] = useState(null)
 
   useEffect(() => {
     fetchStats()
@@ -32,6 +34,15 @@ export default function DashboardContent() {
       const invResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices`, {
         headers: { Authorization: `Bearer ${token}` },
       })
+
+      if (invResponse.status === 403) {
+        const data = await invResponse.json()
+        if (data.error === "Organization pending approval") {
+          setPendingOrg({ name: data.orgName })
+          setLoading(false)
+          return
+        }
+      }
 
       // Fetch team to get names for "per person" stats if needed
       const teamResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/users/team`, {
@@ -111,6 +122,45 @@ export default function DashboardContent() {
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (pendingOrg) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] p-6 text-center">
+        <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-6">
+          <Clock className="text-orange-600 dark:text-orange-400" size={40} />
+        </div>
+        <h2 className="text-2xl font-bold mb-2">Pending Approval</h2>
+        <p className="text-lg font-medium text-foreground mb-1">
+          {pendingOrg.name}
+        </p>
+        <p className="text-muted-foreground max-w-md mb-8">
+          This organization is currently waiting for administrator approval. 
+          You will be notified once it has been approved. 
+          Until then, you can switch to an existing organization or wait.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button 
+            onClick={() => window.location.reload()}
+            variant="outline"
+            className="gap-2"
+          >
+            <RefreshCw size={18} />
+            Check Status
+          </Button>
+          <Button 
+            onClick={() => {
+              // We'll let the user switch using the sidebar dropdown
+              // This button just highlights it
+              toast.info("Use the sidebar to switch organizations")
+            }}
+            className="bg-primary hover:bg-primary/90 font-bold"
+          >
+            Switch Organization
+          </Button>
+        </div>
       </div>
     )
   }

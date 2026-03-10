@@ -3,7 +3,7 @@ import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Badge } from "../ui/badge"
-import { Plus, Search, Download, MoreVertical, Edit2, Trash2, Eye, CreditCard } from "lucide-react"
+import { Plus, Search, Download, MoreVertical, Edit2, Trash2, Eye, CreditCard, Lock, Clock, RefreshCw } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,11 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog"
 import InvoiceModal from "./invoice-modal"
 import EditInvoiceModal from "./edit-invoice-modal"
 import InvoicePreviewModal from "./invoice-preview-modal"
 import PaymentModal from "../payments/payment-modal"
 import { useLocation, useNavigate } from "react-router-dom"
+import { toast } from "sonner"
 
 export default function InvoicesPage({ userRole }) {
 
@@ -33,6 +35,9 @@ export default function InvoicesPage({ userRole }) {
   const [previewModalOpen, setPreviewModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [selectedInvoice, setSelectedInvoice] = useState(null)
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [upgradeMessage, setUpgradeMessage] = useState("")
+  const [pendingOrg, setPendingOrg] = useState(null)
 
   useEffect(() => {
     fetchInvoices()
@@ -56,6 +61,15 @@ export default function InvoicesPage({ userRole }) {
         `${import.meta.env.VITE_API_URL}/api/invoices`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
+
+      if (response.status === 403) {
+        const data = await response.json()
+        if (data.error === "Organization pending approval") {
+          setPendingOrg({ name: data.orgName })
+          setLoading(false)
+          return
+        }
+      }
 
       if (response.ok) {
         const data = await response.json()
@@ -169,6 +183,51 @@ export default function InvoicesPage({ userRole }) {
     setPaymentModalOpen(true)
   }
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (pendingOrg) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] p-6 text-center">
+        <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-6">
+          <Clock className="text-orange-600 dark:text-orange-400" size={40} />
+        </div>
+        <h2 className="text-2xl font-bold mb-2">Pending Approval</h2>
+        <p className="text-lg font-medium text-foreground mb-1">
+          {pendingOrg.name}
+        </p>
+        <p className="text-muted-foreground max-w-md mb-8">
+          This organization is currently waiting for administrator approval. 
+          You will be notified once it has been approved. 
+          Until then, you can switch to an existing organization or wait.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Button 
+            onClick={() => window.location.reload()}
+            variant="outline"
+            className="gap-2"
+          >
+            <RefreshCw size={18} />
+            Check Status
+          </Button>
+          <Button 
+            onClick={() => {
+              toast.info("Use the sidebar to switch organizations")
+            }}
+            className="bg-primary hover:bg-primary/90 font-bold"
+          >
+            Switch Organization
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-6">
 
@@ -189,6 +248,41 @@ export default function InvoicesPage({ userRole }) {
         )}
 
       </div>
+
+      {/* Upgrade Required Modal */}
+      <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+              <Lock className="w-6 h-6 text-amber-600" />
+            </div>
+            <DialogTitle className="text-center text-xl font-bold">Upgrade Required</DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-4">
+            <p className="text-gray-600 font-medium">
+              {upgradeMessage || "You've reached the limit for your current plan."}
+            </p>
+            <p className="text-sm text-gray-500 mt-2">
+              Upgrade your plan to create more invoices and unlock advanced features.
+            </p>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-center">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowUpgradeModal(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={() => navigate("/subscription")}
+              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              View Plans
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Filters */}
 
@@ -384,6 +478,8 @@ export default function InvoicesPage({ userRole }) {
         onClose={() => setIsModalOpen(false)}
         onInvoiceCreated={fetchInvoices}
         initialClientName={initialClientName}
+        setShowUpgradeModal={setShowUpgradeModal}
+        setUpgradeMessage={setUpgradeMessage}
       />
 
       <PaymentModal

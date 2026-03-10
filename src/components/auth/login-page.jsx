@@ -3,7 +3,7 @@ import { Button } from "../ui/button"
 import { Card } from "../ui/card"
 import { Input } from "../ui/input"
 
-export default function LoginPage({ setIsLoggedIn, setHasOrg, setUserEmail, setUserRole }) {
+export default function LoginPage({ setIsLoggedIn, setHasOrg, setUserEmail, setUserId, setUserRole, setGlobalRole }) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isSignUp, setIsSignUp] = useState(false)
@@ -36,7 +36,9 @@ export default function LoginPage({ setIsLoggedIn, setHasOrg, setUserEmail, setU
       localStorage.setItem("token", data.token)
       setHasOrg(!!data.user?.currentOrganization)
       setUserEmail(data.user?.email || "")
-      setUserRole(data.user?.role || "Owner")
+      setUserId(data.user?.id || data.user?._id || "")
+      setUserRole(data.user?.orgRole || data.user?.role || "Owner")
+      setGlobalRole(data.user?.role || "User")
       setIsLoggedIn(true)
     } catch (err) {
       setError("Connection error. Make sure backend is running.")

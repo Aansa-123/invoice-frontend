@@ -1,48 +1,51 @@
 
 import { useState, useEffect, useMemo } from "react"
+import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card } from "../ui/card"
+import { Button } from "../ui/button"
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
 } from "recharts"
 import { 
   TrendingUp, CheckCircle, Clock, AlertTriangle, 
-  Wallet, ArrowUpRight, ArrowRight, User
+  Wallet, ArrowUpRight, ArrowRight, User, Lock
 } from "lucide-react"
-import { Progress } from "../ui/progress"
-import { Avatar, AvatarFallback } from "../ui/avatar"
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-}
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15
-    }
-  }
-}
-
-export default function ReportsPage() {
+export default function ReportsPage({ userPlan = "Free" }) {
+  const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchReports()
-  }, [])
+    if (userPlan !== "Free") {
+      fetchReports()
+    } else {
+      setLoading(false)
+    }
+  }, [userPlan])
+
+  if (userPlan === "Free") {
+    return (
+      <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] p-6 text-center">
+        <div className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-6">
+          <Lock className="text-amber-600 dark:text-amber-400" size={40} />
+        </div>
+        <h2 className="text-2xl font-bold mb-2">Reports Locked</h2>
+        <p className="text-muted-foreground max-w-md mb-8">
+          Detailed business analytics and reports are only available in paid plans. 
+          Upgrade your plan to gain insights into your business growth.
+        </p>
+        <Button 
+          onClick={() => navigate("/subscription")}
+          className="bg-primary hover:bg-primary/90 font-bold px-8 py-6"
+        >
+          Upgrade Now
+        </Button>
+      </div>
+    )
+  }
 
   const fetchReports = async () => {
     try {

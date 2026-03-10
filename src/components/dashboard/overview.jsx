@@ -38,7 +38,7 @@ export default function Overview({ stats }) {
         {/* Donut Chart Section */}
         <div className="flex flex-col items-center justify-center space-y-8">
           <div className="relative w-48 h-48">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <PieChart>
                 <Pie
                   data={data}
@@ -97,7 +97,7 @@ export default function Overview({ stats }) {
               </div>
             </div>
             <div className="h-32">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                 <BarChart data={barData1} onClick={handleBarClick}>
                   <XAxis dataKey="name" hide />
                   <YAxis hide />
