@@ -4,6 +4,8 @@ import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
+import { Avatar, AvatarFallback } from "../ui/avatar"
+import { Progress } from "../ui/progress"
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line, AreaChart, Area
@@ -17,8 +19,10 @@ export default function ReportsPage({ userPlan = "Free" }) {
   const navigate = useNavigate()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
+    setIsLoaded(true)
     if (userPlan !== "Free") {
       fetchReports()
     } else {
@@ -26,25 +30,59 @@ export default function ReportsPage({ userPlan = "Free" }) {
     }
   }, [userPlan])
 
+  const statusData = useMemo(() => {
+    if (!data) return []
+    const total = data.stats.totalRevenue || 1
+    const chartColors = {
+      billed: "#8b5cf6", // Purple/Blue
+      collected: "#10b981", // Green
+      pending: "#f59e0b", // Orange
+      overdue: "#ef4444", // Red
+      primary: "hsl(var(--primary))"
+    }
+    return [
+      { name: "Paid", value: data.stats.totalPaid, color: chartColors.collected, percent: Math.round((data.stats.totalPaid / total) * 100) },
+      { name: "Pending", value: data.stats.totalPending, color: chartColors.pending, percent: Math.round((data.stats.totalPending / total) * 100) },
+      { name: "Overdue", value: (data.stats.totalRevenue - data.stats.totalPaid - data.stats.totalPending) || 0, color: chartColors.overdue, percent: Math.round(((data.stats.totalRevenue - data.stats.totalPaid - data.stats.totalPending) / total) * 100) }
+    ]
+  }, [data])
+
   if (userPlan === "Free") {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] p-6 text-center">
         <div className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mb-6">
-          <Lock className="text-amber-600 dark:text-amber-400" size={40} />
+          <Lock className="text-amber-600 dark:text-amber-400" size={32} />
         </div>
-        <h2 className="text-2xl font-bold mb-2">Reports Locked</h2>
-        <p className="text-muted-foreground max-w-md mb-8">
+        <h2 className="text-lg font-bold mb-2">Reports Locked</h2>
+        <p className="text-sm text-muted-foreground max-w-md mb-8">
           Detailed business analytics and reports are only available in paid plans. 
           Upgrade your plan to gain insights into your business growth.
         </p>
         <Button 
           onClick={() => navigate("/subscription")}
-          className="bg-primary hover:bg-primary/90 font-bold px-8 py-6"
+          className="bg-primary hover:bg-primary/90 font-bold px-8 py-5 text-sm"
         >
           Upgrade Now
         </Button>
       </div>
     )
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { duration: 0.5, ease: "easeOut" }
+    }
   }
 
   const fetchReports = async () => {
@@ -65,23 +103,6 @@ export default function ReportsPage({ userPlan = "Free" }) {
     }
   }
 
-  const chartColors = {
-    billed: "#8b5cf6", // Purple/Blue
-    collected: "#10b981", // Green
-    pending: "#f59e0b", // Orange
-    overdue: "#ef4444", // Red
-    primary: "hsl(var(--primary))"
-  }
-
-  const statusData = useMemo(() => {
-    if (!data) return []
-    const total = data.stats.totalRevenue || 1
-    return [
-      { name: "Paid", value: data.stats.totalPaid, color: chartColors.collected, percent: Math.round((data.stats.totalPaid / total) * 100) },
-      { name: "Pending", value: data.stats.totalPending, color: chartColors.pending, percent: Math.round((data.stats.totalPending / total) * 100) },
-      { name: "Overdue", value: (data.stats.totalRevenue - data.stats.totalPaid - data.stats.totalPending) || 0, color: chartColors.overdue, percent: Math.round(((data.stats.totalRevenue - data.stats.totalPaid - data.stats.totalPending) / total) * 100) }
-    ]
-  }, [data])
 
   if (loading) {
     return (
@@ -101,12 +122,13 @@ export default function ReportsPage({ userPlan = "Free" }) {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="p-3 h-[calc(100vh-64px)] flex flex-col gap-2 overflow-hidden bg-slate-50/50 dark:bg-slate-950/50"
+      className="space-y-4 p-4 lg:p-6 bg-transparent min-h-full overflow-y-auto"
     >
       {/* Header Info */}
-      <div className="flex justify-between items-end shrink-0">
-        <div>
-          <p className="text-[9px] font-medium text-slate-400 uppercase tracking-widest">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-0.5">
+          <h1 className="text-lg font-black text-white tracking-tight">Reports</h1>
+          <p className="text-[9px] text-[#94A3B8] font-medium uppercase tracking-wider">
             {new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(new Date())} • {data.stats.totalInvoices} invoices total
           </p>
         </div>
@@ -161,51 +183,53 @@ export default function ReportsPage({ userPlan = "Free" }) {
               </div>
             </div>
             
-            <div className="flex-1 min-h-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.monthlyRevenue} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
-                  <CartesianGrid vertical={false} stroke="#f1f5f9" strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="month" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 8 }}
-                    dy={5}
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 8 }}
-                    tickFormatter={(v) => `$${v}`}
-                  />
-                  <Tooltip 
-                    cursor={{ fill: '#f8fafc' }}
-                    content={<CustomTooltip />}
-                  />
-                  <Bar 
-                    dataKey="revenue" 
-                    fill="#818cf8" 
-                    radius={[3, 3, 0, 0]} 
-                    barSize={10}
-                    name="Total Billed"
-                    isAnimationActive={true}
-                    animationDuration={1500}
-                    animationBegin={300}
-                    animationEasing="ease-out"
-                  />
-                  <Bar 
-                    dataKey="paid" 
-                    fill="#34d399" 
-                    radius={[3, 3, 0, 0]} 
-                    barSize={10}
-                    name="Collected"
-                    isAnimationActive={true}
-                    animationDuration={1500}
-                    animationBegin={500}
-                    animationEasing="ease-out"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="flex-1 min-h-[240px]">
+              {isLoaded && (
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                  <BarChart data={data.monthlyRevenue} margin={{ top: 5, right: 5, left: -30, bottom: 0 }}>
+                    <CartesianGrid vertical={false} stroke="#f1f5f9" strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontSize: 8 }}
+                      dy={5}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontSize: 8 }}
+                      tickFormatter={(v) => `$${v}`}
+                    />
+                    <Tooltip 
+                      cursor={false}
+                      content={<CustomTooltip />}
+                    />
+                    <Bar 
+                      dataKey="revenue" 
+                      fill="#818cf8" 
+                      radius={[3, 3, 0, 0]} 
+                      barSize={10}
+                      name="Total Billed"
+                      isAnimationActive={true}
+                      animationDuration={1500}
+                      animationBegin={300}
+                      animationEasing="ease-out"
+                    />
+                    <Bar 
+                      dataKey="paid" 
+                      fill="#34d399" 
+                      radius={[3, 3, 0, 0]} 
+                      barSize={10}
+                      name="Collected"
+                      isAnimationActive={true}
+                      animationDuration={1500}
+                      animationBegin={500}
+                      animationEasing="ease-out"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
             
             <div className="flex gap-3 mt-1 justify-center">
@@ -229,29 +253,31 @@ export default function ReportsPage({ userPlan = "Free" }) {
               <p className="text-[9px] text-slate-400 mt-1 mb-2">Distribution by amount</p>
             </div>
             
-            <div className="flex-1 min-h-0 relative">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius="70%"
-                    outerRadius="100%"
-                    paddingAngle={5}
-                    dataKey="value"
-                    stroke="none"
-                    isAnimationActive={true}
-                    animationDuration={1500}
-                    animationBegin={600}
-                  >
-                    {statusData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<div className="hidden" />} />
-                </PieChart>
-              </ResponsiveContainer>
+            <div className="flex-1 min-h-[200px] relative">
+              {isLoaded && (
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius="70%"
+                      outerRadius="100%"
+                      paddingAngle={5}
+                      dataKey="value"
+                      stroke="none"
+                      isAnimationActive={true}
+                      animationDuration={1500}
+                      animationBegin={600}
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={() => null} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                 <span className="text-lg font-black text-slate-800 dark:text-slate-100 leading-none">${data.stats.totalRevenue?.toLocaleString()}</span>
                 <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Total</span>
@@ -337,45 +363,47 @@ export default function ReportsPage({ userPlan = "Free" }) {
               </div>
             </div>
             
-            <div className="flex-1 min-h-0 mt-2">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={data.monthlyRevenue} margin={{ top: 5, right: 0, left: -35, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorPaid" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid vertical={false} stroke="#f1f5f9" strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="month" 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 8 }}
-                    dy={5}
-                  />
-                  <YAxis 
-                    axisLine={false} 
-                    tickLine={false} 
-                    tick={{ fill: '#94a3b8', fontSize: 8 }}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area 
-                    type="monotone" 
-                    dataKey="paid" 
-                    stroke="#10b981" 
-                    strokeWidth={1.5} 
-                    fillOpacity={1} 
-                    fill="url(#colorPaid)" 
-                    dot={{ fill: '#10b981', strokeWidth: 1, r: 2, stroke: '#fff' }}
-                    activeDot={{ r: 3, strokeWidth: 0 }}
-                    isAnimationActive={true}
-                    animationDuration={2000}
-                    animationBegin={800}
-                    animationEasing="ease-in-out"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="flex-1 min-h-[160px] mt-2">
+              {isLoaded && (
+                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                  <AreaChart data={data.monthlyRevenue} margin={{ top: 5, right: 0, left: -35, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorPaid" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} stroke="#f1f5f9" strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="month" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontSize: 8 }}
+                      dy={5}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fill: '#94a3b8', fontSize: 8 }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area 
+                      type="monotone" 
+                      dataKey="paid" 
+                      stroke="#10b981" 
+                      strokeWidth={1.5} 
+                      fillOpacity={1} 
+                      fill="url(#colorPaid)" 
+                      dot={{ fill: '#10b981', strokeWidth: 1, r: 2, stroke: '#fff' }}
+                      activeDot={{ r: 3, strokeWidth: 0 }}
+                      isAnimationActive={true}
+                      animationDuration={2000}
+                      animationBegin={800}
+                      animationEasing="ease-in-out"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </Card>
         </motion.div>
@@ -407,14 +435,21 @@ function StatCard({ icon, label, value, subtext, subIcon, theme }) {
   }
 
   return (
-    <motion.div variants={itemVariants}>
+    <motion.div variants={{
+      hidden: { y: 20, opacity: 0 },
+      visible: { 
+        y: 0, 
+        opacity: 1, 
+        transition: { duration: 0.5, ease: "easeOut" } 
+      }
+    }}>
       <Card className="p-3 border-none shadow-sm rounded-2xl flex flex-col gap-1 relative overflow-hidden group">
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${themes[theme]} ring-1`}>
           {icon}
         </div>
         <div>
           <p className="text-[7px] font-black text-slate-400 tracking-widest uppercase mb-0.5">{label}</p>
-          <p className={`text-lg font-black ${valueColors[theme]}`}>${value?.toLocaleString()}</p>
+          <p className={`text-base font-black ${valueColors[theme]}`}>${value?.toLocaleString()}</p>
         </div>
         <div className={`inline-flex items-center gap-0.5 self-start px-1 py-0.5 rounded text-[7px] font-bold ${subtextColors[theme]}`}>
           {subIcon}
@@ -425,8 +460,10 @@ function StatCard({ icon, label, value, subtext, subIcon, theme }) {
   )
 }
 
-function CustomTooltip({ active, payload, label }) {
+function CustomTooltip({ active, payload, label, ...props }) {
   if (active && payload && payload.length) {
+    // Remove Recharts specific props that shouldn't go to the DOM
+    const { contentStyle, itemStyle, labelStyle, cursor, ...rest } = props;
     return (
       <div className="bg-slate-900 text-white p-3 rounded-2xl shadow-xl border-none text-xs">
         <p className="font-bold mb-2 border-b border-slate-700 pb-1">{label}</p>

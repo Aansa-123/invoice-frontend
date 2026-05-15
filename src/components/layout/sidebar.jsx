@@ -24,8 +24,8 @@ const menuItems = [
   { id: "invoices", label: "Invoices", icon: FileText, path: "/invoices" },
   { id: "clients", label: "Clients", icon: Users, path: "/clients" },
   { id: "payments", label: "Payments", icon: CreditCard, path: "/payments" },
-  { id: "reports", label: "Reports", icon: BarChart3, path: "/reports" },
-  { id: "team", label: "Team", icon: Users2, path: "/team" },
+  { id: "reports", label: "Reports", icon: BarChart3, path: "/reports", pro: true },
+  { id: "team", label: "Team", icon: Users2, path: "/team", pro: true },
   { id: "history", label: "History", icon: History, path: "/history" },
   { id: "subscription", label: "Subscription", icon: Package, path: "/subscription" },
   { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
@@ -150,70 +150,79 @@ export default function Sidebar({ isOpen, onToggle, userRole, userPlan = "Free",
       {/* Mobile Overlay */}
       {isOpen && <div className="fixed inset-0 bg-black/50 lg:hidden" onClick={() => onToggle()} />}
 
-      {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-card border-r border-border transform transition-transform duration-200 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        } lg:translate-x-0 flex flex-col`}
+        className={`fixed inset-y-0 left-0 z-40 w-52 bg-[#1A1635] border-r border-white/[0.02] flex flex-col shadow-2xl transition-all duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
-        <div className="p-6 border-b border-border flex flex-col gap-4">
-          <div className="flex items-center justify-between w-full">
+        <div className="p-3 flex flex-col gap-4">
+          <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <FileText className="text-primary-foreground" size={18} />
+              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#7B5BE4] to-cyan-400 flex items-center justify-center shadow-lg shadow-[#7B5BE4]/20">
+                <FileText className="text-white" size={14} strokeWidth={2.5} />
               </div>
-              <h2 className="font-bold text-lg text-foreground">Invoice Pro</h2>
+              <div>
+                <h2 className="font-black text-xs text-white tracking-tight leading-none">Invoice Pro</h2>
+                <p className="text-[7px] text-[#71717A] font-bold mt-0.5">Billing made simple</p>
+              </div>
             </div>
-            <button onClick={() => onToggle()} className="lg:hidden p-1 hover:bg-muted rounded">
-              <X size={20} />
-            </button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="lg:hidden text-[#71717A] hover:text-white h-7 w-7" 
+              onClick={() => onToggle()}
+            >
+              <X size={16} />
+            </Button>
           </div>
 
           {!isAdmin && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center justify-between w-full p-2 bg-muted/50 hover:bg-muted rounded-lg border border-border transition-colors group">
+                <button className="flex items-center justify-between w-full p-2 bg-white/[0.03] hover:bg-white/[0.05] rounded-xl border border-white/[0.05] transition-all group active:scale-[0.98]">
                   <div className="flex items-center gap-2 overflow-hidden text-left">
-                    <div className="w-6 h-6 rounded bg-primary/20 flex items-center justify-center shrink-0">
-                      <Building2 className="text-primary" size={14} />
+                    <div className="w-5 h-5 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0 border border-indigo-500/10">
+                      <Building2 className="text-indigo-400" size={10} />
                     </div>
-                    <span className="font-medium text-sm truncate">{currentOrg ? currentOrg.name : "Select Organization"}</span>
+                    <span className="font-bold text-[9px] truncate text-white/70 group-hover:text-white transition-colors">{currentOrg ? currentOrg.name : "Select Account"}</span>
                   </div>
-                  <ChevronDown size={14} className="text-muted-foreground group-hover:text-foreground transition-colors" />
+                  <ChevronDown size={8} className="text-[#71717A] group-hover:text-white transition-colors" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="start">
-                <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Switch Organization
+              <DropdownMenuContent className="w-56 bg-[#14142B] border-white/5 text-white p-2 rounded-[1.5rem] shadow-2xl backdrop-blur-xl" align="start">
+                <DropdownMenuLabel className="px-3 py-2 text-[9px] font-black text-[#94A3B8] uppercase tracking-widest opacity-70">
+                  Active Accounts
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-white/[0.03] my-1" />
                 {organizations.length > 0 ? (
-                  organizations.map((org) => (
-                    <DropdownMenuItem
-                      key={org._id}
-                      onClick={() => handleSwitchOrg(org._id)}
-                      className="flex items-center justify-between cursor-pointer"
-                    >
-                      <span className={`truncate ${currentOrg && org._id === currentOrg._id ? "font-bold" : ""}`}>
-                        {org.name}
-                      </span>
-                      {currentOrg && org._id === currentOrg._id && <Check size={14} className="text-primary" />}
-                      {org.status === "pending" && <span className="text-[8px] bg-orange-100 text-orange-600 px-1 rounded ml-2">PENDING</span>}
-                    </DropdownMenuItem>
-                  ))
+                  <div className="space-y-1">
+                    {organizations.map((org) => (
+                      <DropdownMenuItem
+                        key={org._id}
+                        onClick={() => handleSwitchOrg(org._id)}
+                        className="flex items-center justify-between cursor-pointer focus:bg-white/[0.05] focus:text-white p-2.5 rounded-xl transition-all group"
+                      >
+                        <span className={`truncate text-[11px] ${currentOrg && org._id === currentOrg._id ? "font-black text-[#7B5BE4]" : "font-bold text-[#94A3B8] group-hover:text-white"}`}>
+                          {org.name}
+                        </span>
+                        {currentOrg && org._id === currentOrg._id && <Check size={12} className="text-[#7B5BE4] stroke-[3]" />}
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
                 ) : (
-                  <div className="p-2 text-xs text-muted-foreground text-center">No organizations found</div>
+                  <div className="p-4 text-[10px] text-[#94A3B8] text-center font-bold">No accounts found</div>
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setIsCreateModalOpen(true)} className="cursor-pointer text-primary">
-                  <Plus size={14} className="mr-2" /> Create New Organization
+                <DropdownMenuSeparator className="bg-white/[0.03] my-1" />
+                <DropdownMenuItem onClick={() => setIsCreateModalOpen(true)} className="cursor-pointer text-[#7B5BE4] font-black text-[9px] uppercase tracking-widest focus:bg-[#7B5BE4]/10 rounded-xl p-2.5 flex items-center gap-2 group">
+                  <div className="w-5 h-5 rounded-lg bg-[#7B5BE4]/10 flex items-center justify-center group-hover:bg-[#7B5BE4]/20 transition-colors">
+                    <Plus size={12} strokeWidth={3} />
+                  </div>
+                  Add New Account
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-2.5 space-y-0.5 overflow-y-auto scrollbar-none py-1.5">
           {itemsToRender.map((item) => {
             const Icon = item.icon
             const isActive = getIsActive(item.path)
@@ -229,25 +238,53 @@ export default function Sidebar({ isOpen, onToggle, userRole, userPlan = "Free",
                     return
                   }
                   navigate(item.path)
-                  if (window.innerWidth < 1024) onToggle()
+                  // Close sidebar on mobile after navigation
+                  if (window.innerWidth < 1024) {
+                    onToggle()
+                  }
                 }}
-                className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-colors group ${
-                  isActive ? "bg-primary text-primary-foreground" : "text-foreground hover:bg-muted"
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition-all duration-300 group relative overflow-hidden ${
+                  isActive 
+                    ? "bg-[#7B5BE4] text-white shadow-md shadow-[#7B5BE4]/20" 
+                    : "text-[#71717A] hover:text-white hover:bg-white/[0.03]"
                 }`}
                 title={isLocked ? `Upgrade to unlock ${item.label}` : ""}
               >
-                <div className="flex items-center gap-3">
-                  <Icon size={20} />
-                  <span className="font-medium">{item.label}</span>
+                {/* Active indicator bar */}
+                {isActive && (
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-3 bg-white rounded-r-full shadow-[0_0_8px_white]" />
+                )}
+                
+                <div className="flex items-center gap-2.5">
+                  <Icon size={14} strokeWidth={isActive ? 2.5 : 2} className={`${isActive ? "text-white" : "text-[#71717A] group-hover:text-white"} transition-all duration-300`} />
+                  <span className={`font-bold text-[10px] tracking-tight ${isActive ? "text-white" : "text-[#71717A] group-hover:text-white"}`}>{item.label}</span>
                 </div>
-                {isLocked && <Lock size={14} className="text-muted-foreground group-hover:text-foreground transition-colors" />}
+                <div className="flex items-center gap-1.5">
+                  {item.pro && (
+                    <span className={`text-[7px] font-black px-1 py-0.5 rounded bg-[#F39C12]/10 text-[#F39C12] border border-[#F39C12]/10`}>PRO</span>
+                  )}
+                  {isLocked && <Lock size={9} className="text-[#71717A] group-hover:text-white/30 transition-all" />}
+                </div>
               </button>
             )
           })}
         </nav>
 
-        <div className="p-4 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center">© 2025 Invoice Pro</p>
+        <div className="p-3">
+          <div className="bg-[#1A1635] rounded-2xl p-3 border border-white/[0.03] relative overflow-hidden group">
+            <div className="relative z-10">
+              <h4 className="text-[10px] font-bold text-white tracking-tight">Upgrade to Pro</h4>
+              <p className="text-[8px] text-[#71717A] mt-0.5 mb-2.5 leading-relaxed font-medium">Unlock reports, team & more</p>
+              <Button 
+                onClick={() => navigate("/subscription")}
+                size="sm" 
+                className="w-full text-[9px] font-bold h-7 rounded-lg bg-gradient-to-r from-[#7B5BE4] to-cyan-500 hover:opacity-90 transition-all active:scale-95 text-white border-none"
+              >
+                View Plans
+              </Button>
+            </div>
+          </div>
+          <p className="text-[8px] text-[#71717A] text-center mt-3 font-medium opacity-50">© 2025 Invoice Pro</p>
         </div>
       </aside>
 

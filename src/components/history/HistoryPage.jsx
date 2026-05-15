@@ -1,8 +1,6 @@
-
 import { useState, useEffect } from "react"
 import { Card } from "../ui/card"
-import { Badge } from "../ui/badge"
-import { Clock, User, Box, ArrowRight } from "lucide-react"
+import { Clock, User, FileText, UserPlus, Trash2, CreditCard, Box } from "lucide-react"
 
 export default function HistoryPage() {
   const [logs, setLogs] = useState([])
@@ -30,81 +28,92 @@ export default function HistoryPage() {
     }
   }
 
-  const getModuleColor = (module) => {
-    switch (module) {
-      case "Invoices": return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-      case "Clients": return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-      case "Payments": return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
-      case "Team": return "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-      default: return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400"
+  const getLogIcon = (action, module) => {
+    const actionLower = action.toLowerCase()
+    if (actionLower.includes("create") || actionLower.includes("added")) {
+      if (module === "Clients") return <UserPlus size={14} />
+      return <FileText size={14} />
     }
+    if (actionLower.includes("payment") || actionLower.includes("receive")) return <CreditCard size={14} />
+    if (actionLower.includes("delete") || actionLower.includes("remove")) return <Trash2 size={14} />
+    return <Box size={14} />
+  }
+
+  const getLogColor = (action, module) => {
+    const actionLower = action.toLowerCase()
+    if (actionLower.includes("delete") || actionLower.includes("remove")) return "bg-rose-500 shadow-rose-500/20"
+    if (actionLower.includes("payment") || actionLower.includes("receive")) return "bg-emerald-500 shadow-emerald-500/20"
+    if (module === "Clients") return "bg-cyan-500 shadow-cyan-500/20"
+    return "bg-[#A855F7] shadow-[#A855F7]/20"
+  }
+
+  const formatTimeAgo = (date) => {
+    const now = new Date()
+    const diff = now - new Date(date)
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(minutes / 60)
+    const days = Math.floor(hours / 24)
+
+    if (days > 0) return days === 1 ? "Yesterday" : `${days} days ago`
+    if (hours > 0) return `${hours}h ago`
+    if (minutes > 0) return `${minutes}m ago`
+    return "Just now"
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Activity History</h1>
-        <p className="text-muted-foreground mt-1">Track all actions performed across your organization</p>
+    <div className="space-y-4 p-4 lg:p-6 bg-transparent min-h-full">
+      {/* Header */}
+      <div className="space-y-0.5">
+        <h1 className="text-lg font-black text-white tracking-tight">Activity History</h1>
+        <p className="text-[9px] text-[#94A3B8] font-medium uppercase tracking-wider">Recent actions across your workspace</p>
       </div>
 
-      <Card className="p-6">
+      <Card className="bg-[#14142B] border border-white/[0.03] rounded-[2rem] p-6 lg:p-10 shadow-xl overflow-hidden relative">
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-[#A855F7]"></div>
           </div>
         ) : logs.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">No activities recorded yet</div>
+          <div className="text-center py-20 text-[#94A3B8] font-bold text-xs">No activities recorded yet</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-border">
-                <tr>
-                  <th className="text-left py-3 text-muted-foreground font-semibold">User</th>
-                  <th className="text-left py-3 text-muted-foreground font-semibold">Action</th>
-                  <th className="text-left py-3 text-muted-foreground font-semibold">Module</th>
-                  <th className="text-right py-3 text-muted-foreground font-semibold">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log) => (
-                  <tr key={log._id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                    <td className="py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
-                          <User size={14} className="text-muted-foreground" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground">{log.userId?.name || "System"}</p>
-                          <p className="text-xs text-muted-foreground">{log.userId?.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="py-4">
-                      <div className="flex flex-col">
-                        <span className="text-foreground font-medium">{log.action}</span>
-                        {log.details && <span className="text-xs text-muted-foreground">{log.details}</span>}
-                      </div>
-                    </td>
-                    <td className="py-4">
-                      <Badge className={`${getModuleColor(log.module)} border-none`}>
-                        {log.module}
-                      </Badge>
-                    </td>
-                    <td className="py-4 text-right">
-                      <div className="flex flex-col items-end">
-                        <div className="flex items-center gap-1 text-foreground">
-                          <Clock size={12} className="text-muted-foreground" />
-                          <span>{new Date(log.createdAt).toLocaleDateString()}</span>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="relative space-y-6">
+            {/* Timeline Line */}
+            <div className="absolute left-[19px] top-2 bottom-2 w-0.5 bg-white/[0.05]" />
+
+            {logs.map((log, index) => (
+              <div key={log._id} className="relative flex items-start gap-5 group">
+                {/* Timeline Dot & Icon */}
+                <div className="relative z-10">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white border-4 border-[#14142B] transition-transform group-hover:scale-110 duration-300 ${getLogColor(log.action, log.module)} shadow-lg`}>
+                    {getLogIcon(log.action, log.module)}
+                  </div>
+                  {/* Small colored indicator dot on the line */}
+                  <div className={`absolute -left-[18px] top-1/2 -translate-y-1/2 w-2 h-2 rounded-full border-2 border-[#14142B] ${getLogColor(log.action, log.module).split(' ')[0]}`} />
+                </div>
+
+                <div className="flex flex-col pt-1">
+                  <h3 className="text-xs font-bold text-white group-hover:text-[#A855F7] transition-colors duration-300">
+                    {log.action}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-1 text-[9px] text-[#94A3B8] font-medium">
+                      <Clock size={10} />
+                      <span>{formatTimeAgo(log.createdAt)}</span>
+                    </div>
+                    <span className="text-[#94A3B8] text-[9px]">•</span>
+                    <div className="flex items-center gap-1 text-[9px] text-[#94A3B8] font-medium">
+                      <span className="lowercase">by</span>
+                      <span className="font-bold text-white/60">{log.userId?.name || "System"}</span>
+                    </div>
+                  </div>
+                  {log.details && (
+                    <p className="text-[9px] text-[#94A3B8]/60 mt-1.5 italic max-w-md">
+                      {log.details}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </Card>

@@ -1,138 +1,72 @@
 import { useState, useEffect } from "react"
-import { LogOut, Menu, AlertTriangle, Bell } from "lucide-react"
-import { Outlet, useNavigate, Link } from "react-router-dom"
+import { LogOut, Menu } from "lucide-react"
+import { Outlet, useNavigate, Link, useLocation } from "react-router-dom"
 import { Button } from "../ui/button.jsx"
 import Sidebar from "./sidebar.jsx"
-import pusher from "../../utils/pusher"
-import { toast } from "sonner"
+import { Input } from "../ui/input"
 
-export default function MainLayout({ userId, userRole, userPlan, isAdmin = false, isExpired = false, graceDays = 0 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+export default function MainLayout({ userId, orgId, userRole, userPlan, isAdmin = false, isExpired = false, graceDays = 0 }) {
   const [showExpiredPopup, setShowExpiredPopup] = useState(isExpired)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
 
   useEffect(() => {
-    if (!userId) return
-
-    // Admin channel
-    if (isAdmin) {
-      const adminChannel = pusher.subscribe("admin-channel")
-      adminChannel.bind("new-org-request", (data) => {
-        toast.info("New Organization Request", {
-          description: data.message,
-          action: {
-            label: "View Requests",
-            onClick: () => navigate("/admin/approvals")
-          },
-          duration: 10000,
-        })
-      })
-
-      return () => {
-        pusher.unsubscribe("admin-channel")
-      }
-    } else {
-      // User channel
-      const userChannel = pusher.subscribe(`user-${userId}-channel`)
-      userChannel.bind("org-status-updated", (data) => {
-        const isApproved = data.status === "approved"
-        
-        toast[isApproved ? "success" : "error"](
-          isApproved ? "Organization Approved!" : "Organization Rejected",
-          {
-            description: data.message,
-            duration: 10000,
-          }
-        )
-
-        // Refresh the page or update state if needed
-        if (isApproved) {
-          // You might want to refresh organization list or just show the toast
-          // window.location.reload()
-        }
-      })
-
-      return () => {
-        pusher.unsubscribe(`user-${userId}-channel`)
-      }
+    // Close sidebar on route change for mobile
+    if (isSidebarOpen) {
+      setIsSidebarOpen(false)
     }
-  }, [userId, isAdmin, navigate])
+  }, [location.pathname])
 
   const handleLogout = () => {
     navigate("/logout")
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex min-h-screen bg-[#0B0A1A] text-[#E0E0E0] dark selection:bg-[#7B5BE4]/30 selection:text-white relative">
+      {/* Background radial gradient glow */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-[100%] h-[100%] bg-[radial-gradient(circle_at_0%_0%,#1E1B3A_0%,transparent_50%)] opacity-70" />
+      </div>
+
       <Sidebar
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
         userRole={userRole}
         userPlan={userPlan}
         isAdmin={isAdmin}
       />
 
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        {/* Expiration Modal/Popup */}
-        {showExpiredPopup && !isAdmin && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-            <div className="bg-card border border-border rounded-2xl shadow-2xl max-w-md w-full p-8 animate-in fade-in zoom-in duration-300">
-              <div className="flex flex-col items-center text-center">
-                <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-6">
-                  <AlertTriangle className="text-orange-600 dark:text-orange-400" size={40} />
-                </div>
-                
-                <h2 className="text-2xl font-bold text-foreground mb-4">Your subscription has expired.</h2>
-                
-                {graceDays > 0 && (
-                  <div className="bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-300 px-4 py-2 rounded-lg font-medium mb-4">
-                    Admin granted you {graceDays} grace days.
-                  </div>
-                )}
-                
-                <p className="text-muted-foreground mb-8">
-                  Upgrade now to continue using Invoice Pro and access all premium features without limits.
-                </p>
-                
-                <div className="grid grid-cols-2 gap-4 w-full">
-                  <Button 
-                    variant="outline"
-                    onClick={() => setShowExpiredPopup(false)}
-                    className="w-full py-6"
-                  >
-                    Later
-                  </Button>
-                  <Button 
-                    onClick={() => {
-                      setShowExpiredPopup(false)
-                      navigate("/subscription")
-                    }}
-                    className="w-full bg-primary hover:bg-primary/90 py-6 font-bold"
-                  >
-                    Upgrade Now
-                  </Button>
-                </div>
-              </div>
+      <div className="flex-1 flex flex-col min-h-screen lg:ml-52 relative z-10">
+        {/* Header remains transparent/blurred */}
+        <header className="h-14 flex items-center justify-between px-5 border-b border-white/[0.03] bg-transparent backdrop-blur-2xl sticky top-0 z-30">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="lg:hidden text-[#94A3B8] hover:text-white hover:bg-white/[0.05]"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu size={20} />
+            </Button>
+            <div className="flex flex-col">
+              <h1 className="text-sm font-black text-white tracking-tight">Invoice Management</h1>
+              <p className="text-[8px] text-[#94A3B8] font-bold">Welcome back, manage your billing in one place</p>
             </div>
           </div>
-        )}
 
-        <header className="bg-card border-b border-border h-16 flex items-center justify-between px-6 shadow-sm">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 hover:bg-muted rounded-lg">
-              <Menu size={20} />
-            </button>
-            <h1 className="text-xl font-semibold text-foreground">Invoice Management</h1>
+          <div className="flex items-center gap-2.5">
+            <Button onClick={handleLogout} variant="ghost" className="gap-2 text-[#94A3B8] hover:text-white hover:bg-white/[0.05] rounded-lg h-8 px-2.5 transition-all active:scale-95 group">
+              <LogOut size={14} />
+              <span className="font-bold text-[10px] hidden lg:inline">Logout</span>
+            </Button>
           </div>
-
-          <Button onClick={handleLogout} variant="outline" className="gap-2 bg-transparent">
-            <LogOut size={16} />
-            Logout
-          </Button>
         </header>
 
-        <main className="flex-1 overflow-auto">
-          <Outlet />
+        <main className="flex-1 p-4 lg:p-5 w-full">
+          <div className="max-w-[1400px] mx-auto bg-[#121124] border border-white/[0.05] rounded-3xl min-h-[calc(100vh-80px)] shadow-2xl overflow-hidden">
+            <Outlet context={{ userId, orgId, userRole, userPlan, isAdmin }} />
+          </div>
         </main>
       </div>
     </div>

@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
+import LandingPage from "./components/pages/landingPage"
 import LoginPage from "./components/auth/login-page"
+import SignupPage from "./components/auth/signup-page"
 import LogoutPage from "./components/auth/logout-page"
 import SetupWizard from "./components/auth/setup-wizard"
 import DashboardContent from "./components/dashboard/dashboard-content"
@@ -34,7 +36,7 @@ const ProtectedRoute = ({ children, isLoggedIn, isLoading, hasOrg, role, globalR
     )
   }
   
-  if (!isLoggedIn) return <Navigate to="/" replace />
+  if (!isLoggedIn) return <Navigate to="/login" replace />
   
   // Admin redirect
   if (globalRole === "Admin" && !window.location.pathname.startsWith("/admin") && window.location.pathname !== "/logout") {
@@ -61,6 +63,7 @@ const ProtectedRoute = ({ children, isLoggedIn, isLoading, hasOrg, role, globalR
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [hasOrg, setHasOrg] = useState(false)
+  const [orgId, setOrgId] = useState("")
   const [userId, setUserId] = useState("")
   const [userRole, setUserRole] = useState("")
   const [globalRole, setGlobalRole] = useState("")
@@ -91,6 +94,7 @@ export default function App() {
         const data = await response.json()
         setIsLoggedIn(true)
         setHasOrg(!!data.user.currentOrganization)
+        setOrgId(data.user.currentOrganization?._id || data.user.currentOrganization || "")
         setUserId(data.user._id || data.user.id)
         setUserRole(data.user.orgRole || data.user.role) // Default back to role if orgRole not found
         setGlobalRole(data.user.role)
@@ -113,6 +117,13 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={
+          <LandingPage 
+            isLoggedIn={isLoggedIn} 
+            globalRole={globalRole} 
+            hasOrg={hasOrg} 
+          />
+        } />
+        <Route path="/login" element={
           isLoggedIn ? (
             globalRole === "Admin" ? (
               <Navigate to="/admin" replace />
@@ -125,6 +136,22 @@ export default function App() {
             <LoginPage 
               setIsLoggedIn={setIsLoggedIn} 
               setHasOrg={setHasOrg} 
+              setOrgId={setOrgId}
+              setUserEmail={setUserEmail} 
+              setUserId={setUserId}
+              setUserRole={setUserRole} 
+              setGlobalRole={setGlobalRole} 
+            />
+          )
+        } />
+        <Route path="/signup" element={
+          isLoggedIn ? (
+            <Navigate to="/setup" replace />
+          ) : (
+            <SignupPage 
+              setIsLoggedIn={setIsLoggedIn} 
+              setHasOrg={setHasOrg} 
+              setOrgId={setOrgId}
               setUserEmail={setUserEmail} 
               setUserId={setUserId}
               setUserRole={setUserRole} 
@@ -139,7 +166,7 @@ export default function App() {
           </ProtectedRoute>
         } />
         
-        <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} isLoading={isLoading} hasOrg={hasOrg} role={userRole} globalRole={globalRole}><MainLayout userId={userId} userRole={userRole} userPlan={userPlan} isExpired={isExpired} graceDays={graceDays} /></ProtectedRoute>}>
+        <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} isLoading={isLoading} hasOrg={hasOrg} role={userRole} globalRole={globalRole}><MainLayout userId={userId} orgId={orgId} userRole={userRole} userPlan={userPlan} isExpired={isExpired} graceDays={graceDays} /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardContent />} />
           <Route path="/invoices" element={<InvoicesPage userRole={userRole} />} />
           <Route path="/payments" element={<PaymentsPage userRole={userRole} />} />

@@ -3,9 +3,10 @@ import { Link, useNavigate } from "react-router-dom"
 import { Button } from "../ui/button"
 import { Card } from "../ui/card"
 import { Input } from "../ui/input"
-import { Mail, Lock, Eye, EyeOff, ArrowRight, FileText } from "lucide-react"
+import { User, Mail, Lock, Eye, EyeOff, ArrowRight, FileText } from "lucide-react"
 
-export default function LoginPage({ setIsLoggedIn, setHasOrg, setOrgId, setUserEmail, setUserId, setUserRole, setGlobalRole }) {
+export default function SignupPage({ setIsLoggedIn, setHasOrg, setOrgId, setUserEmail, setUserId, setUserRole, setGlobalRole }) {
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -19,16 +20,16 @@ export default function LoginPage({ setIsLoggedIn, setHasOrg, setOrgId, setUserE
     setError("")
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ name, email, password }),
       })
 
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.message || data.error || "Authentication failed")
+        setError(data.message || data.error || "Registration failed")
         return
       }
 
@@ -40,14 +41,7 @@ export default function LoginPage({ setIsLoggedIn, setHasOrg, setOrgId, setUserE
       setUserRole(data.user?.orgRole || data.user?.role || "Owner")
       setGlobalRole(data.user?.role || "User")
       setIsLoggedIn(true)
-      
-      if (data.user?.role === "Admin") {
-        navigate("/admin")
-      } else if (!data.user?.currentOrganization) {
-        navigate("/setup")
-      } else {
-        navigate("/dashboard")
-      }
+      navigate("/setup")
     } catch (err) {
       setError("Connection error. Make sure backend is running.")
     } finally {
@@ -68,9 +62,8 @@ export default function LoginPage({ setIsLoggedIn, setHasOrg, setOrgId, setUserE
       <Card className="w-full max-w-[380px] bg-[#1A1635]/50 border-[#2D2D44] backdrop-blur-xl shadow-2xl overflow-hidden rounded-[1.5rem]">
         <div className="p-7">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white tracking-tight">Welcome back</h2>
-            <p className="text-slate-400 text-sm">Sign in to manage your invoices and clients.</p>
-          </div>
+            <h2 className="text-2xl font-bold text-white tracking-tight">Create account</h2>
+              </div>
 
           {error && (
             <div className="mb-4 p-2.5 bg-red-500/10 border border-red-500/20 text-red-500 text-xs rounded-xl">
@@ -79,6 +72,21 @@ export default function LoginPage({ setIsLoggedIn, setHasOrg, setOrgId, setUserE
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name</label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
+                <Input
+                  type="text"
+                  placeholder="John Doe"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="pl-10 h-11 bg-[#0D0B21] border-[#2D2D44] text-white text-sm placeholder:text-slate-600 rounded-xl focus:ring-[#7B5BE4] focus:border-[#7B5BE4]"
+                  required
+                />
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email</label>
               <div className="relative">
@@ -100,7 +108,7 @@ export default function LoginPage({ setIsLoggedIn, setHasOrg, setOrgId, setUserE
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 h-4 w-4" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="At least 8 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10 h-11 bg-[#0D0B21] border-[#2D2D44] text-white text-sm placeholder:text-slate-600 rounded-xl focus:ring-[#7B5BE4] focus:border-[#7B5BE4]"
@@ -121,19 +129,19 @@ export default function LoginPage({ setIsLoggedIn, setHasOrg, setOrgId, setUserE
               disabled={isLoading}
               className="w-full h-11 bg-gradient-to-r from-[#A885FF] to-[#00CFE8] hover:opacity-90 text-white font-bold rounded-xl text-sm flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(168,133,255,0.2)] mt-2"
             >
-              {isLoading ? "Signing In..." : (
+              {isLoading ? "Creating Account..." : (
                 <>
-                  Sign In <ArrowRight className="h-4 w-4" />
+                  Create Account <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="text-center">
             <p className="text-slate-400 text-xs">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-[#7B5BE4] font-bold hover:underline">
-                Sign up
+              Already have an account?{" "}
+              <Link to="/login" className="text-[#7B5BE4] font-bold hover:underline">
+                Sign in
               </Link>
             </p>
           </div>

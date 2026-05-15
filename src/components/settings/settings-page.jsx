@@ -3,22 +3,24 @@ import { useState, useEffect } from "react"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { Badge } from "../ui/badge"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs"
-import { Building2, FileText, Lock, Upload, CheckCircle2, ShieldCheck, Mail } from "lucide-react"
+import { Building2, FileText, Lock, Upload, ShieldCheck, Globe, Mail, Phone, MapPin, Save, Check } from "lucide-react"
 
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState("business")
   const [settings, setSettings] = useState({
     businessName: "",
     address: "",
     phone: "",
     email: "",
+    website: "",
     logo: "",
     currency: "USD",
     taxPercentage: 0,
-    invoicePrefix: "INV",
+    defaultNotes: "Thank you for your business",
     paymentTerms: "Due on Receipt",
   })
+  
+  const [showSuccess, setShowSuccess] = useState(false)
   
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -58,7 +60,7 @@ export default function SettingsPage() {
   }
 
   const handleSettingsSubmit = async (e) => {
-    e.preventDefault()
+    if (e) e.preventDefault()
     setSaving(true)
 
     try {
@@ -73,7 +75,8 @@ export default function SettingsPage() {
       })
 
       if (response.ok) {
-        alert("Settings saved successfully!")
+        setShowSuccess(true)
+        setTimeout(() => setShowSuccess(false), 3000)
       }
     } catch (error) {
       console.error("Failed to save settings:", error)
@@ -105,11 +108,7 @@ export default function SettingsPage() {
       })
 
       if (response.ok) {
-        alert("Password updated successfully!")
         setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" })
-      } else {
-        const data = await response.json()
-        alert(data.error || "Failed to update password")
       }
     } catch (error) {
       console.error("Password update error:", error)
@@ -139,7 +138,6 @@ export default function SettingsPage() {
       if (response.ok) {
         const data = await response.json()
         setSettings({ ...settings, logo: data.url })
-        alert("Logo uploaded successfully!")
       }
     } catch (error) {
       console.error("Logo upload error:", error)
@@ -151,253 +149,270 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#A855F7]"></div>
       </div>
     )
   }
 
+  const menuItems = [
+    { id: "business", label: "Business", sub: "Company details", icon: Building2 },
+    { id: "invoices", label: "Invoices", sub: "Defaults & templates", icon: FileText },
+    { id: "security", label: "Security", sub: "Password & access", icon: Lock },
+  ]
+
   return (
-    <div className="p-6 space-y-6 pb-12">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-1">Configure your business and security preferences</p>
+    <div className="space-y-4 p-4 lg:p-6 bg-transparent min-h-full pb-24 relative">
+      <div className="space-y-0.5">
+        <h1 className="text-lg font-black text-white tracking-tight">Settings</h1>
+        <p className="text-[9px] text-[#94A3B8] font-medium uppercase tracking-wider">Configure your business preferences and account</p>
       </div>
 
-      <Tabs defaultValue="business" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="business" className="gap-2">
-            <Building2 size={16} /> Business
-          </TabsTrigger>
-          <TabsTrigger value="invoice" className="gap-2">
-            <FileText size={16} /> Invoices
-          </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
-            <Lock size={16} /> Security
-          </TabsTrigger>
-        </TabsList>
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Sidebar */}
+        <div className="w-full lg:w-64 space-y-2">
+          {menuItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-3 p-3 rounded-2xl transition-all duration-300 text-left group ${
+                activeTab === item.id 
+                  ? "bg-[#A855F7] text-white shadow-lg shadow-[#A855F7]/20" 
+                  : "bg-[#14142B] text-[#94A3B8] border border-white/[0.03] hover:border-white/10 hover:bg-white/5"
+              }`}
+            >
+              <div className={`p-2 rounded-xl ${activeTab === item.id ? "bg-white/20" : "bg-white/5"} transition-colors`}>
+                <item.icon size={18} />
+              </div>
+              <div>
+                <p className={`text-[11px] font-black ${activeTab === item.id ? "text-white" : "text-white/80"}`}>{item.label}</p>
+                <p className={`text-[8px] font-medium ${activeTab === item.id ? "text-white/70" : "text-[#94A3B8]"}`}>{item.sub}</p>
+              </div>
+            </button>
+          ))}
+        </div>
 
-        {/* Business Settings */}
-        <TabsContent value="business">
-          <Card className="p-6">
-            <form onSubmit={handleSettingsSubmit} className="space-y-6 max-w-2xl">
-              <div className="flex flex-col md:flex-row gap-8 items-start">
-                <div className="flex-1 space-y-4 w-full">
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Company Name</label>
-                    <Input
-                      value={settings.businessName}
-                      onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
-                      className="mt-2"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Official Email</label>
-                    <Input
-                      type="email"
-                      value={settings.email}
-                      onChange={(e) => setSettings({ ...settings, email: e.target.value })}
-                      className="mt-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Phone Number</label>
-                    <Input
-                      value={settings.phone}
-                      onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
-                      className="mt-2"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground">Business Address</label>
-                    <textarea
-                      value={settings.address}
-                      onChange={(e) => setSettings({ ...settings, address: e.target.value })}
-                      className="w-full mt-2 p-2 border border-border rounded-lg bg-background text-foreground text-sm"
-                      rows={3}
-                    />
-                  </div>
-                </div>
-
-                <div className="w-full md:w-48 flex flex-col items-center gap-4">
-                  <label className="text-sm font-medium text-foreground self-start">Company Logo</label>
-                  <div className="w-40 h-40 border-2 border-dashed border-border rounded-xl flex items-center justify-center overflow-hidden relative group">
-                    {settings.logo ? (
-                      <img src={settings.logo} alt="Logo" className="w-full h-full object-contain p-2" />
-                    ) : (
-                      <div className="text-center p-4">
-                        <Upload className="mx-auto text-muted-foreground mb-2" size={24} />
-                        <span className="text-xs text-muted-foreground">Upload Logo</span>
+        {/* Content Area */}
+        <div className="flex-1">
+          <Card className="bg-[#14142B] border border-white/[0.03] rounded-[2rem] p-6 lg:p-8 shadow-xl min-h-[500px]">
+            {activeTab === "business" && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="flex flex-col md:flex-row gap-10">
+                  {/* Logo Section */}
+                  <div className="w-full md:w-48 space-y-4">
+                    <h3 className="text-[11px] font-black text-white uppercase tracking-wider">Company Profile</h3>
+                    <p className="text-[8px] text-[#94A3B8]">Shown on invoices and receipts</p>
+                    
+                    <div className="relative group">
+                      <div className="w-40 h-40 rounded-2xl bg-[#0B0B1E] border-2 border-dashed border-white/5 flex flex-col items-center justify-center overflow-hidden transition-all group-hover:border-[#A855F7]/30">
+                        {settings.logo ? (
+                          <img src={settings.logo} alt="Logo" className="w-full h-full object-contain p-4" />
+                        ) : (
+                          <>
+                            <div className="p-3 rounded-full bg-white/5 text-[#94A3B8] mb-2 group-hover:text-[#A855F7] transition-colors">
+                              <Upload size={20} />
+                            </div>
+                            <span className="text-[10px] font-black text-[#94A3B8] uppercase">Upload Logo</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          disabled={uploading}
+                        />
                       </div>
-                    )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                      disabled={uploading}
-                    />
-                    {uploading && (
-                      <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
+                      <p className="text-[8px] text-[#94A3B8]/60 mt-3 text-center italic">Square PNG/JPG (min 400x400)</p>
+                    </div>
+                  </div>
+
+                  {/* Form Section */}
+                  <div className="flex-1 space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Company Name</label>
+                        <div className="relative">
+                          <Building2 size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                          <Input
+                            value={settings.businessName}
+                            onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
+                            className="pl-10 bg-[#0B0B1E]/50 border-white/[0.05] h-10 rounded-xl text-xs font-bold text-white placeholder:text-[#94A3B8]"
+                            placeholder="Your business name"
+                          />
+                        </div>
                       </div>
-                    )}
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Official Email</label>
+                        <div className="relative">
+                          <Mail size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                          <Input
+                            type="email"
+                            value={settings.email}
+                            readOnly
+                            className="pl-10 bg-[#0B0B1E]/50 border-white/[0.05] h-10 rounded-xl text-xs font-bold text-white/50 placeholder:text-[#94A3B8] cursor-not-allowed"
+                            placeholder="billing@company.com"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Phone Number</label>
+                        <div className="relative">
+                          <Phone size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                          <Input
+                            value={settings.phone}
+                            onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                            className="pl-10 bg-[#0B0B1E]/50 border-white/[0.05] h-10 rounded-xl text-xs font-bold text-white placeholder:text-[#94A3B8]"
+                            placeholder="+1 555-0123"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Website</label>
+                        <div className="relative">
+                          <Globe size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]" />
+                          <Input
+                            value={settings.website}
+                            onChange={(e) => setSettings({ ...settings, website: e.target.value })}
+                            className="pl-10 bg-[#0B0B1E]/50 border-white/[0.05] h-10 rounded-xl text-xs font-bold text-white placeholder:text-[#94A3B8]"
+                            placeholder="https://yourcompany.com"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5 md:col-span-2">
+                        <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Business Address</label>
+                        <div className="relative">
+                          <MapPin size={14} className="absolute left-3.5 top-4 text-[#94A3B8]" />
+                          <textarea
+                            value={settings.address}
+                            onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                            className="w-full pl-10 pt-3.5 pb-3.5 bg-[#0B0B1E]/50 border border-white/[0.05] rounded-xl text-xs font-bold text-white placeholder:text-[#94A3B8] focus:outline-none focus:ring-1 focus:ring-[#A855F7]/30 min-h-[80px] resize-none"
+                            placeholder="Street, City, ZIP, Country"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    Recommended: Square PNG or JPG (min 400x400)
-                  </p>
                 </div>
               </div>
+            )}
 
-              <div className="pt-4 border-t border-border">
-                <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90">
-                  {saving ? "Saving..." : "Save Business Settings"}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </TabsContent>
-
-        {/* Invoice Settings */}
-        <TabsContent value="invoice">
-          <Card className="p-6">
-            <form onSubmit={handleSettingsSubmit} className="space-y-6 max-w-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm font-medium text-foreground">Currency</label>
-                  <select
-                    value={settings.currency}
-                    onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
-                    className="w-full mt-2 p-2 border border-border rounded-lg bg-background text-foreground text-sm"
-                  >
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
-                    <option value="PKR">PKR (Rs)</option>
-                    <option value="INR">INR (₹)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground">Default Tax (%)</label>
-                  <Input
-                    type="number"
-                    value={settings.taxPercentage}
-                    onChange={(e) => setSettings({ ...settings, taxPercentage: Number(e.target.value) })}
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground">Invoice Number Prefix</label>
-                  <Input
-                    value={settings.invoicePrefix}
-                    onChange={(e) => setSettings({ ...settings, invoicePrefix: e.target.value })}
-                    className="mt-2"
-                    placeholder="e.g. INV"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground">Default Payment Terms</label>
-                  <select
-                    value={settings.paymentTerms}
-                    onChange={(e) => setSettings({ ...settings, paymentTerms: e.target.value })}
-                    className="w-full mt-2 p-2 border border-border rounded-lg bg-background text-foreground text-sm"
-                  >
-                    <option value="Due on Receipt">Due on Receipt</option>
-                    <option value="Net 15">Net 15</option>
-                    <option value="Net 30">Net 30</option>
-                    <option value="Net 60">Net 60</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-border">
-                <Button type="submit" disabled={saving} className="bg-primary hover:bg-primary/90">
-                  {saving ? "Saving..." : "Save Invoice Settings"}
-                </Button>
-              </div>
-            </form>
-          </Card>
-        </TabsContent>
-
-        {/* Security Settings */}
-        <TabsContent value="security">
-          <div className="space-y-6 max-w-2xl">
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <ShieldCheck className="text-primary" size={20} /> Change Password
-              </h3>
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground">Current Password</label>
-                  <Input
-                    type="password"
-                    value={passwordData.currentPassword}
-                    onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                    className="mt-2"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {activeTab === "invoices" && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <div className="space-y-6">
                   <div>
-                    <label className="text-sm font-medium text-foreground">New Password</label>
-                    <Input
-                      type="password"
-                      value={passwordData.newPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                      className="mt-2"
-                      required
-                    />
+                    <h3 className="text-[11px] font-black text-white uppercase tracking-wider mb-1">Invoice Defaults</h3>
+                    <p className="text-[8px] text-[#94A3B8]">Applied to every new invoice you create</p>
                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Default Currency</label>
+                      <select
+                        value={settings.currency}
+                        onChange={(e) => setSettings({ ...settings, currency: e.target.value })}
+                        className="w-full bg-[#0B0B1E]/50 border border-white/[0.05] h-10 rounded-xl text-xs font-bold text-white px-3 focus:outline-none focus:ring-1 focus:ring-[#A855F7]/30 appearance-none"
+                      >
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="PKR">PKR (Rs)</option>
+                        <option value="INR">INR (₹)</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Default Tax Rate (%)</label>
+                      <Input
+                        type="number"
+                        value={settings.taxPercentage}
+                        onChange={(e) => setSettings({ ...settings, taxPercentage: Number(e.target.value) })}
+                        className="bg-[#0B0B1E]/50 border-white/[0.05] h-10 rounded-xl text-xs font-bold text-white"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Default Notes</label>
+                      <textarea
+                        value={settings.defaultNotes}
+                        onChange={(e) => setSettings({ ...settings, defaultNotes: e.target.value })}
+                        className="w-full px-3 py-2 bg-[#0B0B1E]/50 border border-white/[0.05] rounded-xl text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-[#A855F7]/30 min-h-[60px] resize-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+               
+              </div>
+            )}
+
+            {activeTab === "security" && (
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <form onSubmit={handlePasswordSubmit} className="space-y-6">
                   <div>
-                    <label className="text-sm font-medium text-foreground">Confirm New Password</label>
-                    <Input
-                      type="password"
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                      className="mt-2"
-                      required
-                    />
+                    <h3 className="text-[11px] font-black text-white uppercase tracking-wider mb-1">Change Password</h3>
+                    <p className="text-[8px] text-[#94A3B8]">Update your login credentials</p>
                   </div>
-                </div>
-                <div className="pt-2">
-                  <Button type="submit" disabled={saving} variant="outline">
-                    {saving ? "Updating..." : "Update Password"}
-                  </Button>
-                </div>
-              </form>
-            </Card>
 
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <Mail className="text-primary" size={20} /> Email Verification
-              </h3>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Status: Verified</p>
-                  <p className="text-xs text-muted-foreground mt-1">Your email is verified for receiving billing notifications.</p>
-                </div>
-                <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none gap-1">
-                  <CheckCircle2 size={12} /> Verified
-                </Badge>
+                  <div className="space-y-4 max-w-md">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Current Password</label>
+                      <Input
+                        type="password"
+                        value={passwordData.currentPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                        className="bg-[#0B0B1E]/50 border-white/[0.05] h-10 rounded-xl text-xs font-bold text-white"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">New Password</label>
+                      <Input
+                        type="password"
+                        value={passwordData.newPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                        className="bg-[#0B0B1E]/50 border-white/[0.05] h-10 rounded-xl text-xs font-bold text-white"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Confirm New Password</label>
+                      <Input
+                        type="password"
+                        value={passwordData.confirmPassword}
+                        onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                        className="bg-[#0B0B1E]/50 border-white/[0.05] h-10 rounded-xl text-xs font-bold text-white"
+                        placeholder="••••••••"
+                      />
+                    </div>
+                  </div>
+                </form>
               </div>
-            </Card>
+            )}
+          </Card>
+        </div>
+      </div>
 
-            <Card className="p-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <ShieldCheck className="text-primary" size={20} /> Two-Factor Authentication (2FA)
-              </h3>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Protect your account with 2FA</p>
-                  <p className="text-xs text-muted-foreground mt-1">Add an extra layer of security to your login process.</p>
-                </div>
-                <Button variant="outline" size="sm" disabled>Enable 2FA</Button>
-              </div>
-              <p className="text-[10px] text-muted-foreground mt-4 italic">* Coming soon in future updates</p>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+      {/* Floating Save Button */}
+      <div className="fixed bottom-8 right-8 z-50">
+        <Button 
+          onClick={handleSettingsSubmit}
+          disabled={saving}
+          className="h-10 px-6 rounded-2xl bg-gradient-to-r from-[#A855F7] to-[#06B6D4] hover:opacity-90 text-white font-black text-[11px] uppercase tracking-widest shadow-2xl shadow-[#A855F7]/30 border-none transition-all active:scale-95 group"
+        >
+          {saving ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2" />
+          ) : (
+            <Save size={16} className="mr-2 group-hover:scale-110 transition-transform" />
+          )}
+          {saving ? "Saving..." : "Save changes"}
+        </Button>
+      </div>
+
+      <p className="text-[10px] text-[#94A3B8] font-medium text-center mt-8 italic">Changes are saved to your account immediately.</p>
     </div>
   )
 }

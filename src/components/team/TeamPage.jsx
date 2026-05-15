@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
@@ -107,16 +108,22 @@ export default function TeamPage({ userPlan = "Free" }) {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Team Members</h1>
-          <p className="text-muted-foreground mt-1">Manage your team and their access roles</p>
+    <div className="space-y-4 p-4 lg:p-6 bg-transparent min-h-full">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-0.5">
+          <h1 className="text-lg font-black text-white tracking-tight">Team Members</h1>
+          <p className="text-[9px] text-[#94A3B8] font-medium uppercase tracking-wider">Manage your team and their access roles</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="bg-primary hover:bg-primary/90 gap-2">
-          <UserPlus size={18} />
-          Invite Member
-        </Button>
+        {(userPlan !== "Free") && (
+          <Button 
+            onClick={() => setIsModalOpen(true)} 
+            className="h-9 px-5 rounded-full bg-gradient-to-r from-[#A855F7] to-[#06B6D4] hover:opacity-90 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#A855F7]/20 border-none transition-all active:scale-95 flex items-center gap-2"
+          >
+            <UserPlus size={14} />
+            Invite Member
+          </Button>
+        )}
       </div>
 
       <Card className="p-6">
@@ -128,14 +135,14 @@ export default function TeamPage({ userPlan = "Free" }) {
           <div className="text-center py-12 text-muted-foreground">No team members found</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead className="border-b border-border">
                 <tr>
-                  <th className="text-left py-3 text-muted-foreground font-semibold">Name</th>
-                  <th className="text-left py-3 text-muted-foreground font-semibold">Email</th>
-                  <th className="text-left py-3 text-muted-foreground font-semibold">Role</th>
-                  <th className="text-left py-3 text-muted-foreground font-semibold">Status</th>
-                  <th className="text-right py-3 text-muted-foreground font-semibold">Actions</th>
+                  <th className="text-left py-3 text-muted-foreground font-semibold text-[9px] uppercase tracking-widest">Name</th>
+                  <th className="text-left py-3 text-muted-foreground font-semibold text-[9px] uppercase tracking-widest">Email</th>
+                  <th className="text-left py-3 text-muted-foreground font-semibold text-[9px] uppercase tracking-widest">Role</th>
+                  <th className="text-left py-3 text-muted-foreground font-semibold text-[9px] uppercase tracking-widest">Status</th>
+                  <th className="text-right py-3 text-muted-foreground font-semibold text-[9px] uppercase tracking-widest">Actions</th>
                 </tr>
               </thead>
               <tbody>

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
 @custom-variant dark (&:is(.dark *));
 
@@ -29,7 +30,7 @@
   --chart-3: oklch(0.75 0.12 55);
   --chart-4: oklch(0.55 0.15 342);
   --chart-5: oklch(0.68 0.12 40);
-  --radius: 0.75rem;
+  --radius: 1rem;
   --sidebar: oklch(1 0 0);
   --sidebar-foreground: oklch(0.15 0.02 279);
   --sidebar-primary: oklch(0.48 0.15 280);
@@ -41,42 +42,42 @@
 }
 
 .dark {
-  --background: oklch(0.12 0.01 279);
-  --foreground: oklch(0.95 0.02 279);
-  --card: oklch(0.18 0.01 279);
-  --card-foreground: oklch(0.95 0.02 279);
-  --popover: oklch(0.18 0.01 279);
-  --popover-foreground: oklch(0.95 0.02 279);
-  --primary: oklch(0.62 0.18 280);
-  --primary-foreground: oklch(0.12 0.01 279);
-  --secondary: oklch(0.35 0.04 136);
-  --secondary-foreground: oklch(0.95 0.02 279);
-  --muted: oklch(0.28 0.01 279);
-  --muted-foreground: oklch(0.68 0.01 279);
-  --accent: oklch(0.72 0.18 142);
-  --accent-foreground: oklch(0.12 0.01 279);
-  --destructive: oklch(0.62 0.22 29);
-  --destructive-foreground: oklch(0.95 0.02 279);
-  --border: oklch(0.25 0.01 279);
-  --input: oklch(0.22 0.01 279);
-  --ring: oklch(0.62 0.18 280);
-  --chart-1: oklch(0.62 0.18 280);
-  --chart-2: oklch(0.72 0.18 142);
-  --chart-3: oklch(0.85 0.12 55);
-  --chart-4: oklch(0.65 0.15 342);
-  --chart-5: oklch(0.78 0.12 40);
-  --sidebar: oklch(0.18 0.01 279);
-  --sidebar-foreground: oklch(0.95 0.02 279);
-  --sidebar-primary: oklch(0.62 0.18 280);
-  --sidebar-primary-foreground: oklch(0.12 0.01 279);
-  --sidebar-accent: oklch(0.35 0.04 136);
-  --sidebar-accent-foreground: oklch(0.95 0.02 279);
-  --sidebar-border: oklch(0.25 0.01 279);
-  --sidebar-ring: oklch(0.62 0.18 280);
+  --background: #0D0B21;
+  --foreground: #E0E0E0;
+  --card: #1A1635;
+  --card-foreground: #E0E0E0;
+  --popover: #1A1635;
+  --popover-foreground: #E0E0E0;
+  --primary: #7B5BE4;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1A1635;
+  --secondary-foreground: #E0E0E0;
+  --muted: #0D0B21;
+  --muted-foreground: #71717A;
+  --accent: #7B5BE4;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --destructive-foreground: #F8FAFC;
+  --border: #2D2D44;
+  --input: #2D2D44;
+  --ring: #7B5BE4;
+  --chart-1: #7B5BE4;
+  --chart-2: #00C4B4;
+  --chart-3: #27AE60;
+  --chart-4: #F39C12;
+  --chart-5: #8B5CF6;
+  --sidebar: #1A1635;
+  --sidebar-foreground: #71717A;
+  --sidebar-primary: #7B5BE4;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #0D0B21;
+  --sidebar-accent-foreground: #E0E0E0;
+  --sidebar-border: #2D2D44;
+  --sidebar-ring: #7B5BE4;
 }
 
 @theme inline {
-  --font-sans: "Inter", "Inter Fallback", sans-serif;
+  --font-sans: "Poppins", sans-serif;
   --font-mono: "Geist Mono", "Geist Mono Fallback", monospace;
 
   --color-background: var(--background);
@@ -119,11 +120,26 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+@layer utilities {
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    font-family: "Poppins", sans-serif;
   }
   body {
+    font-family: "Poppins", sans-serif;
     @apply bg-background text-foreground;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Poppins", sans-serif !important;
   }
 }

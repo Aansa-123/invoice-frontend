@@ -56,6 +56,13 @@ export default function InvoicePreviewModal({ isOpen, onClose, invoice }) {
   const subtotal = invoice.items.reduce((sum, item) => sum + item.quantity * item.price, 0)
   const total = subtotal + invoice.tax - invoice.discount
 
+  const getCurrencySymbol = (code) => {
+    const symbols = { USD: "$", EUR: "€", GBP: "£", PKR: "Rs", INR: "₹" }
+    return symbols[code] || "$"
+  }
+
+  const currencySymbol = getCurrencySymbol(company?.currency || "USD")
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -137,10 +144,10 @@ export default function InvoicePreviewModal({ isOpen, onClose, invoice }) {
                   {invoice.items.map((item, idx) => (
                     <tr key={idx} className="border-b border-gray-200">
                       <td className="px-4 py-3">{item.name}</td>
-                      <td className="px-4 py-3 text-right">${item.price.toFixed(2)}</td>
+                      <td className="px-4 py-3 text-right">{currencySymbol}{item.price.toFixed(2)}</td>
                       <td className="px-4 py-3 text-right">{item.quantity}</td>
                       <td className="px-4 py-3 text-right font-semibold">
-                        ${(item.quantity * item.price).toFixed(2)}
+                        {currencySymbol}{(item.quantity * item.price).toFixed(2)}
                       </td>
                     </tr>
                   ))}
@@ -151,21 +158,21 @@ export default function InvoicePreviewModal({ isOpen, onClose, invoice }) {
                 <div className="w-64">
                   <div className="flex justify-between py-2 border-b border-gray-200">
                     <span className="text-gray-600">SUB-TOTAL</span>
-                    <span className="font-semibold">${subtotal.toFixed(2)}</span>
+                    <span className="font-semibold">{currencySymbol}{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-gray-200">
-                    <span className="text-gray-600">TAX (${invoice.tax.toFixed(2)})</span>
-                    <span className="font-semibold">${invoice.tax.toFixed(2)}</span>
+                    <span className="text-gray-600">TAX ({currencySymbol}{invoice.tax.toFixed(2)})</span>
+                    <span className="font-semibold">{currencySymbol}{invoice.tax.toFixed(2)}</span>
                   </div>
                   {invoice.discount > 0 && (
                     <div className="flex justify-between py-2 border-b border-gray-200">
                       <span className="text-gray-600">DISCOUNT</span>
-                      <span className="font-semibold">-${invoice.discount.toFixed(2)}</span>
+                      <span className="font-semibold">-{currencySymbol}{invoice.discount.toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between py-3 bg-gray-800 text-white px-4 mt-4">
                     <span className="font-bold">TOTAL</span>
-                    <span className="font-bold">${total.toFixed(2)}</span>
+                    <span className="font-bold">{currencySymbol}{total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

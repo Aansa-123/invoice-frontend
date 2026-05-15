@@ -32,7 +32,12 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-[#0B0A1A] text-[#E0E0E0] relative overflow-hidden">
+      {/* Background radial gradient glow */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-0 w-[100%] h-[100%] bg-[radial-gradient(circle_at_0%_0%,#1E1B3A_0%,transparent_50%)] opacity-70" />
+      </div>
+
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
@@ -40,28 +45,30 @@ export default function Dashboard() {
         onNavigate={setCurrentPage}
       />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 relative z-10 ${sidebarOpen ? "lg:ml-52" : ""}`}>
         {/* Header */}
-        <header className="bg-card border-b border-border h-16 flex items-center justify-between px-6 shadow-sm">
-          <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-2 hover:bg-muted rounded-lg">
-              <Menu size={20} />
+        <header className="bg-transparent backdrop-blur-2xl border-b border-white/5 h-14 flex items-center justify-between px-4 lg:px-6 shadow-sm">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="lg:hidden p-1.5 hover:bg-muted rounded-lg">
+              <Menu size={18} />
             </button>
-            <h1 className="text-xl font-semibold text-foreground">Invoice Management</h1>
+            <h1 className="text-sm font-black text-white tracking-tight">Invoice Management</h1>
           </div>
 
-          <Button onClick={handleLogout} variant="outline" className="gap-2 bg-transparent">
-            <LogOut size={16} />
+          <Button onClick={handleLogout} variant="outline" size="sm" className="gap-2 bg-transparent h-8 text-xs border-white/10 text-[#94A3B8] hover:text-white">
+            <LogOut size={14} />
             Logout
           </Button>
         </header>
 
         {/* Main Content */}
-        <main className="flex-1 overflow-auto">
-          {currentPage === "dashboard" && <DashboardContent onNavigate={setCurrentPage} />}
-          {currentPage === "invoices" && <InvoicesPage />}
-          {currentPage === "clients" && <ClientsPage />}
-          {currentPage === "settings" && <SettingsPage />}
+        <main className="flex-1 p-4 lg:p-5 overflow-auto">
+          <div className="max-w-[1400px] mx-auto bg-[#121124] border border-white/[0.05] rounded-3xl min-h-full shadow-2xl overflow-hidden">
+            {currentPage === "dashboard" && <DashboardContent onNavigate={setCurrentPage} />}
+            {currentPage === "invoices" && <InvoicesPage />}
+            {currentPage === "clients" && <ClientsPage />}
+            {currentPage === "settings" && <SettingsPage />}
+          </div>
         </main>
       </div>
     </div>

@@ -38,9 +38,11 @@ export default function InvoicesPage({ userRole }) {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [upgradeMessage, setUpgradeMessage] = useState("")
   const [pendingOrg, setPendingOrg] = useState(null)
+  const [currency, setCurrency] = useState("USD")
 
   useEffect(() => {
     fetchInvoices()
+    fetchSettings()
 
     if (location.state?.clientName) {
       setInitialClientName(location.state.clientName)
@@ -48,6 +50,28 @@ export default function InvoicesPage({ userRole }) {
       navigate(location.pathname, { replace: true, state: {} })
     }
   }, [])
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/company`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        if (data.data?.currency) {
+          setCurrency(data.data.currency)
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch settings:", error)
+    }
+  }
+
+  const getCurrencySymbol = (code) => {
+    const symbols = { USD: "$", EUR: "€", GBP: "£", PKR: "Rs", INR: "₹" }
+    return symbols[code] || "$"
+  }
 
   useEffect(() => {
     filterInvoices()
@@ -103,23 +127,21 @@ export default function InvoicesPage({ userRole }) {
   const getStatusColor = (status) => {
     switch (status) {
       case "Paid":
-        return "bg-green-600 text-white"
+        return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
       case "Pending":
-        return "bg-yellow-500 text-white"
+        return "bg-amber-500/10 text-amber-500 border-amber-500/20"
       case "Overdue":
-        return "bg-red-600 text-white"
+        return "bg-rose-500/10 text-rose-500 border-rose-500/20"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-muted text-muted-foreground border-border"
     }
   }
 
   const handleDeleteInvoice = async (invoiceId) => {
-
     if (!window.confirm("Delete this invoice?")) return
 
     try {
       const token = localStorage.getItem("token")
-
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/invoices/${invoiceId}`,
         {
@@ -131,7 +153,6 @@ export default function InvoicesPage({ userRole }) {
       if (response.ok) {
         setInvoices(invoices.filter((inv) => inv._id !== invoiceId))
       }
-
     } catch (error) {
       console.error("Delete failed:", error)
     }
@@ -195,13 +216,13 @@ export default function InvoicesPage({ userRole }) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] p-6 text-center">
         <div className="w-20 h-20 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-6">
-          <Clock className="text-orange-600 dark:text-orange-400" size={40} />
+          <Clock className="text-orange-600 dark:text-orange-400" size={32} />
         </div>
-        <h2 className="text-2xl font-bold mb-2">Pending Approval</h2>
-        <p className="text-lg font-medium text-foreground mb-1">
+        <h2 className="text-lg font-bold mb-2">Pending Approval</h2>
+        <p className="text-base font-medium text-foreground mb-1">
           {pendingOrg.name}
         </p>
-        <p className="text-muted-foreground max-w-md mb-8">
+        <p className="text-sm text-muted-foreground max-w-md mb-8">
           This organization is currently waiting for administrator approval. 
           You will be notified once it has been approved. 
           Until then, you can switch to an existing organization or wait.
@@ -229,54 +250,53 @@ export default function InvoicesPage({ userRole }) {
   }
 
   return (
-    <div className="p-6 space-y-6">
-
+    <div className="space-y-4 p-4 lg:p-6 bg-transparent min-h-full">
       {/* Header */}
-
-      <div className="flex justify-between items-center">
-
-        <div>
-          <h1 className="text-3xl font-bold">Invoices</h1>
-          <p className="text-muted-foreground">Manage and track all your invoices</p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="space-y-0.5">
+          <h1 className="text-lg font-black text-white tracking-tight">Invoices</h1>
+          <p className="text-[9px] text-[#94A3B8] font-medium uppercase tracking-wider">Manage and track all your invoices</p>
         </div>
-
+        
         {userRole !== "Viewer" && (
-          <Button onClick={() => setIsModalOpen(true)} className="gap-2">
-            <Plus size={18} />
+          <Button 
+            onClick={() => setIsModalOpen(true)} 
+            className="h-9 px-5 rounded-full bg-gradient-to-r from-[#A855F7] to-[#06B6D4] hover:opacity-90 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#A855F7]/20 border-none transition-all active:scale-95 flex items-center gap-2"
+          >
+            <Plus size={14} />
             Create Invoice
           </Button>
         )}
-
       </div>
 
       {/* Upgrade Required Modal */}
       <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="max-w-md bg-[#0B0B1E] border-white/10 rounded-[2.5rem] p-10">
           <DialogHeader>
-            <div className="mx-auto w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-4">
-              <Lock className="w-6 h-6 text-amber-600" />
+            <div className="w-20 h-20 bg-[#A855F7]/10 rounded-full flex items-center justify-center mb-6 border border-[#A855F7]/20 shadow-[0_0_30px_rgba(168,85,247,0.1)]">
+              <Lock className="w-6 h-6 text-[#A855F7]" />
             </div>
-            <DialogTitle className="text-center text-xl font-bold">Upgrade Required</DialogTitle>
+            <DialogTitle className="text-center text-lg font-black text-white tracking-tight">Upgrade Required</DialogTitle>
           </DialogHeader>
-          <div className="text-center py-4">
-            <p className="text-gray-600 font-medium">
+          <div className="text-center py-6">
+            <p className="text-white font-medium text-base leading-relaxed">
               {upgradeMessage || "You've reached the limit for your current plan."}
             </p>
-            <p className="text-sm text-gray-500 mt-2">
+            <p className="text-[#94A3B8] mt-3 text-xs font-medium">
               Upgrade your plan to create more invoices and unlock advanced features.
             </p>
           </div>
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:justify-center">
+          <DialogFooter className="flex flex-col sm:flex-row gap-4 sm:justify-center">
             <Button 
               variant="outline" 
               onClick={() => setShowUpgradeModal(false)}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto h-12 rounded-2xl border-white/5 hover:bg-white/5 text-[#94A3B8] font-black text-xs uppercase tracking-widest"
             >
               Cancel
             </Button>
             <Button 
               onClick={() => navigate("/subscription")}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full sm:w-auto h-12 rounded-2xl bg-gradient-to-r from-[#A855F7] to-[#06B6D4] hover:opacity-90 text-white font-black text-xs uppercase tracking-widest shadow-xl shadow-[#A855F7]/20 transition-all active:scale-95"
             >
               View Plans
             </Button>
@@ -284,193 +304,148 @@ export default function InvoicesPage({ userRole }) {
         </DialogContent>
       </Dialog>
 
-      {/* Filters */}
-
-      <Card className="p-6 overflow-visible">
-
-        <div className="flex gap-4">
-
-          <div className="flex-1 relative">
-
+      {/* Search & Filters Combined Card */}
+      <Card className="p-4 bg-[#14142B] border border-white/[0.03] rounded-2xl shadow-xl overflow-visible">
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex-1 relative w-full">
             <Search
-              size={18}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              size={14}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]"
             />
-
             <Input
               placeholder="Search invoices..."
-              className="pl-10"
+              className="pl-10 bg-[#0B0B1E]/50 border-white/[0.05] focus-visible:ring-1 focus-visible:ring-[#A855F7]/30 h-10 rounded-xl w-full text-[11px] font-bold placeholder:text-[#94A3B8] text-white"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-
           </div>
 
-          <div className="flex gap-2">
-
+          <div className="flex items-center gap-1.5 bg-[#0B0B1E] p-1 rounded-xl border border-white/[0.05]">
             {["All", "Pending", "Paid", "Overdue"].map((status) => (
-
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
-                className={`px-4 py-2 rounded-lg text-sm ${
+                className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
                   statusFilter === status
-                    ? "bg-primary text-white"
-                    : "bg-muted"
+                    ? "bg-gradient-to-r from-[#A855F7] to-[#06B6D4] text-white shadow-lg shadow-[#A855F7]/20"
+                    : "text-[#94A3B8] hover:text-white"
                 }`}
               >
                 {status}
               </button>
-
             ))}
-
           </div>
-
         </div>
-
       </Card>
 
-      {/* Table */}
+      {/* Table Content */}
+      <Card className="bg-[#14142B] border border-white/[0.03] rounded-2xl shadow-xl overflow-hidden group">
+        <div className="overflow-x-auto relative scrollbar-thin scrollbar-thumb-white/5">
+          <table className="w-full text-left">
+            <thead className="bg-[#0B0B1E] border-b border-white/5">
+              <tr>
+                <th className="px-6 py-4 text-[9px] font-black text-[#94A3B8] uppercase tracking-widest">Invoice</th>
+                <th className="px-6 py-4 text-[9px] font-black text-[#94A3B8] uppercase tracking-widest">Client</th>
+                <th className="px-6 py-4 text-[9px] font-black text-[#94A3B8] uppercase tracking-widest">Amount</th>
+                <th className="px-6 py-4 text-[9px] font-black text-[#94A3B8] uppercase tracking-widest">Status</th>
+                <th className="px-6 py-4 text-[9px] font-black text-[#94A3B8] uppercase tracking-widest">Date</th>
+                <th className="px-6 py-4 text-[9px] font-black text-[#94A3B8] uppercase tracking-widest text-right">Actions</th>
+              </tr>
+            </thead>
 
-      <Card className="p-6">
-
-        {loading ? (
-
-          <div className="py-10 text-center">Loading...</div>
-
-        ) : (
-
-         <div className="overflow-x-auto overflow-y-visible relative">
-
-            <table className="w-full text-sm">
-
-              <thead className="border-b">
-
-                <tr>
-                  <th className="text-left py-3">Invoice</th>
-                  <th className="text-left py-3">Client</th>
-                  <th className="text-left py-3">Amount</th>
-                  <th className="text-left py-3">Status</th>
-                  <th className="text-left py-3">Date</th>
-                  <th className="text-right py-3">Actions</th>
-                </tr>
-
-              </thead>
-
-              <tbody>
-
-                {filteredInvoices.map((invoice) => (
-
-                  <tr
-                    key={invoice._id}
-                    className="border-b hover:bg-muted/50 transition"
+            <tbody className="divide-y divide-white/[0.03]">
+              {filteredInvoices.map((invoice) => (
+                <tr
+                  key={invoice._id}
+                  className="hover:bg-white/[0.02] transition-all group/item"
+                >
+                  <td
+                    onClick={() => handlePreviewClick(invoice)}
+                    className="px-6 py-4 cursor-pointer"
                   >
-
-                    <td
-                      onClick={() => handlePreviewClick(invoice)}
-                      className="cursor-pointer font-medium py-3"
-                    >
+                    <span className="text-[11px] font-bold text-white group-hover/item:text-[#A855F7] transition-colors uppercase">
                       {invoice.invoiceNumber}
-                    </td>
+                    </span>
+                  </td>
 
-                    <td>{invoice.clientId?.name}</td>
+                  <td className="px-6 py-4">
+                    <span className="text-[11px] font-bold text-white/80">
+                      {invoice.clientId?.name || "Unknown"}
+                    </span>
+                  </td>
 
-                    <td className="font-semibold">
-                      ${invoice.total?.toLocaleString()}
-                    </td>
+                  <td className="px-6 py-4">
+                    <span className="text-[12px] font-black text-white tracking-tight">
+                      {getCurrencySymbol(currency)}{invoice.total?.toLocaleString()}
+                    </span>
+                  </td>
 
-                    <td>
-                      <Badge className={getStatusColor(invoice.status)}>
-                        {invoice.status}
-                      </Badge>
-                    </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2.5 py-0.5 rounded-lg text-[8px] font-black border ${getStatusColor(invoice.status)} uppercase tracking-widest`}>
+                      {invoice.status}
+                    </span>
+                  </td>
 
-                    <td>
+                  <td className="px-6 py-4">
+                    <span className="text-[10px] font-bold text-[#94A3B8]">
                       {new Date(
                         invoice.invoiceDate || invoice.createdAt
                       ).toLocaleDateString()}
-                    </td>
+                    </span>
+                  </td>
 
-                    {/* ACTIONS */}
-
-                    <td className="text-right">
-
-                      <div className="flex justify-end gap-2">
-
-                        {/* DOWNLOAD */}
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleDownloadPDF(invoice._id)
-                          }}
-                          className="p-1 hover:bg-muted rounded text-primary transition-colors"
-                          title="Download PDF"
-                        >
-                          <Download size={16} />
-                        </button>
-
-                        {/* RADIX DROPDOWN */}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button 
-                              onClick={(e) => e.stopPropagation()}
-                              className="p-1 hover:bg-muted rounded inline-flex transition-colors"
-                            >
-                              <MoreVertical size={16} />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem onClick={() => handlePreviewClick(invoice)}>
-                              <Eye size={16} className="mr-2" />
-                              View Details
-                            </DropdownMenuItem>
-
-                            {userRole !== "Viewer" && invoice.status !== "Paid" && (
-                              <DropdownMenuItem onClick={() => handleEditClick(invoice)}>
-                                <Edit2 size={16} className="mr-2" />
-                                Edit Invoice
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-3 items-center">
+                      <button 
+                        onClick={() => handleDownloadPDF(invoice._id)}
+                        className="p-1.5 rounded-lg text-[#94A3B8] hover:text-white hover:bg-white/5 transition-all"
+                        title="Download PDF"
+                      >
+                        <Download size={14} />
+                      </button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="p-1.5 rounded-lg text-[#94A3B8] hover:text-white hover:bg-white/5 transition-all">
+                            <MoreVertical size={14} />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="bg-[#14142B] border-white/5 text-white p-2 rounded-xl shadow-2xl" align="end">
+                          <DropdownMenuItem onClick={() => handlePreviewClick(invoice)} className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-white/5 cursor-pointer text-[10px] font-bold">
+                            <Eye size={14} className="text-[#06B6D4]" /> View Details
+                          </DropdownMenuItem>
+                          
+                          {userRole !== "Viewer" && (
+                            <>
+                              <DropdownMenuItem onClick={() => handleEditClick(invoice)} className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-white/5 cursor-pointer text-[10px] font-bold">
+                                <Edit2 size={14} className="text-amber-400" /> Edit Invoice
                               </DropdownMenuItem>
-                            )}
-                            
-                            {(userRole === "Owner" || userRole === "Admin") && invoice.status !== "Paid" && (
-                              <DropdownMenuItem onClick={() => handleRecordPaymentClick(invoice)}>
-                                <CreditCard size={16} className="mr-2" />
-                                Record Payment
-                              </DropdownMenuItem>
-                            )}
-
-                            {(userRole === "Owner" || userRole === "Admin") && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  variant="destructive"
-                                  onClick={() => handleDeleteInvoice(invoice._id)}
-                                >
-                                  <Trash2 size={16} className="mr-2" />
-                                  Delete Invoice
+                              
+                              {invoice.status !== "Paid" && (
+                                <DropdownMenuItem onClick={() => handleRecordPaymentClick(invoice)} className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-white/5 cursor-pointer text-[10px] font-bold">
+                                  <CreditCard size={14} className="text-emerald-400" /> Record Payment
                                 </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-
-                      </div>
-
-                    </td>
-
-                  </tr>
-
-                ))}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-        )}
-
+                              )}
+                              
+                              <DropdownMenuSeparator className="bg-white/5 my-1" />
+                              
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteInvoice(invoice._id)} 
+                                className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-rose-500/10 text-rose-500 cursor-pointer text-[10px] font-bold"
+                              >
+                                <Trash2 size={14} /> Delete Invoice
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Card>
 
       <InvoiceModal
@@ -501,7 +476,6 @@ export default function InvoicesPage({ userRole }) {
         onClose={() => setPreviewModalOpen(false)}
         invoice={selectedInvoice}
       />
-
     </div>
   )
 }
