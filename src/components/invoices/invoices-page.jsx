@@ -110,7 +110,15 @@ export default function InvoicesPage({ userRole }) {
     let filtered = invoices
 
     if (statusFilter !== "All") {
-      filtered = filtered.filter((inv) => inv.status === statusFilter)
+      if (statusFilter === "Draft") {
+        filtered = filtered.filter((inv) => inv.isDraft === true)
+      } else {
+        filtered = filtered.filter((inv) => inv.status === statusFilter && !inv.isDraft)
+      }
+    } else {
+      // By default show non-drafts in "All", or maybe show everything?
+      // User said "when items are added to list show in invoice page where all invoice/item list show"
+      // So All should probably include Drafts too, but let's keep them distinct if filtered.
     }
 
     if (searchTerm) {
@@ -257,16 +265,6 @@ export default function InvoicesPage({ userRole }) {
           <h1 className="text-lg font-black text-white tracking-tight">Invoices</h1>
           <p className="text-[9px] text-[#94A3B8] font-medium uppercase tracking-wider">Manage and track all your invoices</p>
         </div>
-        
-        {userRole !== "Viewer" && (
-          <Button 
-            onClick={() => setIsModalOpen(true)} 
-            className="h-9 px-5 rounded-full bg-gradient-to-r from-[#A855F7] to-[#06B6D4] hover:opacity-90 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-[#A855F7]/20 border-none transition-all active:scale-95 flex items-center gap-2"
-          >
-            <Plus size={14} />
-            Create Invoice
-          </Button>
-        )}
       </div>
 
       {/* Upgrade Required Modal */}
@@ -321,7 +319,7 @@ export default function InvoicesPage({ userRole }) {
           </div>
 
           <div className="flex items-center gap-1.5 bg-[#0B0B1E] p-1 rounded-xl border border-white/[0.05]">
-            {["All", "Pending", "Paid", "Overdue"].map((status) => (
+            {["All", "Pending", "Paid", "Overdue", "Draft"].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
@@ -360,11 +358,11 @@ export default function InvoicesPage({ userRole }) {
                   className="hover:bg-white/[0.02] transition-all group/item"
                 >
                   <td
-                    onClick={() => handlePreviewClick(invoice)}
-                    className="px-6 py-4 cursor-pointer"
+                    onClick={() => !invoice.isDraft && handlePreviewClick(invoice)}
+                    className={`px-6 py-4 ${invoice.isDraft ? "" : "cursor-pointer"}`}
                   >
                     <span className="text-[11px] font-bold text-white group-hover/item:text-[#A855F7] transition-colors uppercase">
-                      {invoice.invoiceNumber}
+                      {invoice.isDraft ? "—" : invoice.invoiceNumber}
                     </span>
                   </td>
 
@@ -376,19 +374,23 @@ export default function InvoicesPage({ userRole }) {
 
                   <td className="px-6 py-4">
                     <span className="text-[12px] font-black text-white tracking-tight">
-                      {getCurrencySymbol(currency)}{invoice.total?.toLocaleString()}
+                      {invoice.isDraft ? "—" : `${getCurrencySymbol(currency)}${invoice.total?.toLocaleString()}`}
                     </span>
                   </td>
 
                   <td className="px-6 py-4">
-                    <span className={`px-2.5 py-0.5 rounded-lg text-[8px] font-black border ${getStatusColor(invoice.status)} uppercase tracking-widest`}>
-                      {invoice.status}
-                    </span>
+                    {invoice.isDraft ? (
+                      <span className="text-[10px] text-gray-600 font-bold tracking-widest uppercase">Order</span>
+                    ) : (
+                      <span className={`px-2.5 py-0.5 rounded-lg text-[8px] font-black border ${getStatusColor(invoice.status)} uppercase tracking-widest`}>
+                        {invoice.status}
+                      </span>
+                    )}
                   </td>
 
                   <td className="px-6 py-4">
                     <span className="text-[10px] font-bold text-[#94A3B8]">
-                      {new Date(
+                      {invoice.isDraft ? "—" : new Date(
                         invoice.invoiceDate || invoice.createdAt
                       ).toLocaleDateString()}
                     </span>
@@ -396,49 +398,60 @@ export default function InvoicesPage({ userRole }) {
 
                   <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-3 items-center">
-                      <button 
-                        onClick={() => handleDownloadPDF(invoice._id)}
-                        className="p-1.5 rounded-lg text-[#94A3B8] hover:text-white hover:bg-white/5 transition-all"
-                        title="Download PDF"
-                      >
-                        <Download size={14} />
-                      </button>
-                      
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 rounded-lg text-[#94A3B8] hover:text-white hover:bg-white/5 transition-all">
-                            <MoreVertical size={14} />
+                      {invoice.isDraft ? (
+                        <Button 
+                          onClick={() => handleEditClick(invoice)}
+                          className="h-7 px-4 rounded-lg bg-gradient-to-r from-[#A855F7] to-[#06B6D4] hover:opacity-90 text-white font-black text-[9px] uppercase tracking-widest border-none transition-all active:scale-95 shadow-lg shadow-[#A855F7]/20"
+                        >
+                          Generate Invoice
+                        </Button>
+                      ) : (
+                        <>
+                          <button 
+                            onClick={() => handleDownloadPDF(invoice._id)}
+                            className="p-1.5 rounded-lg text-[#94A3B8] hover:text-white hover:bg-white/5 transition-all"
+                            title="Download PDF"
+                          >
+                            <Download size={14} />
                           </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="bg-[#14142B] border-white/5 text-white p-2 rounded-xl shadow-2xl" align="end">
-                          <DropdownMenuItem onClick={() => handlePreviewClick(invoice)} className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-white/5 cursor-pointer text-[10px] font-bold">
-                            <Eye size={14} className="text-[#06B6D4]" /> View Details
-                          </DropdownMenuItem>
                           
-                          {userRole !== "Viewer" && (
-                            <>
-                              <DropdownMenuItem onClick={() => handleEditClick(invoice)} className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-white/5 cursor-pointer text-[10px] font-bold">
-                                <Edit2 size={14} className="text-amber-400" /> Edit Invoice
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1.5 rounded-lg text-[#94A3B8] hover:text-white hover:bg-white/5 transition-all">
+                                <MoreVertical size={14} />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="bg-[#14142B] border-white/5 text-white p-2 rounded-xl shadow-2xl" align="end">
+                              <DropdownMenuItem onClick={() => handlePreviewClick(invoice)} className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-white/5 cursor-pointer text-[10px] font-bold">
+                                <Eye size={14} className="text-[#06B6D4]" /> View Details
                               </DropdownMenuItem>
                               
-                              {invoice.status !== "Paid" && (
-                                <DropdownMenuItem onClick={() => handleRecordPaymentClick(invoice)} className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-white/5 cursor-pointer text-[10px] font-bold">
-                                  <CreditCard size={14} className="text-emerald-400" /> Record Payment
-                                </DropdownMenuItem>
+                              {userRole !== "Viewer" && (
+                                <>
+                                  <DropdownMenuItem onClick={() => handleEditClick(invoice)} className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-white/5 cursor-pointer text-[10px] font-bold">
+                                    <Edit2 size={14} className="text-amber-400" /> Edit Invoice
+                                  </DropdownMenuItem>
+                                  
+                                  {invoice.status !== "Paid" && invoice.status !== "Overdue" && !invoice.isDraft && (
+                                    <DropdownMenuItem onClick={() => handleRecordPaymentClick(invoice)} className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-white/5 cursor-pointer text-[10px] font-bold">
+                                      <CreditCard size={14} className="text-emerald-400" /> Record Payment
+                                    </DropdownMenuItem>
+                                  )}
+                                  
+                                  <DropdownMenuSeparator className="bg-white/5 my-1" />
+                                  
+                                  <DropdownMenuItem 
+                                    onClick={() => handleDeleteInvoice(invoice._id)} 
+                                    className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-rose-500/10 text-rose-500 cursor-pointer text-[10px] font-bold"
+                                  >
+                                    <Trash2 size={14} /> Delete Invoice
+                                  </DropdownMenuItem>
+                                </>
                               )}
-                              
-                              <DropdownMenuSeparator className="bg-white/5 my-1" />
-                              
-                              <DropdownMenuItem 
-                                onClick={() => handleDeleteInvoice(invoice._id)} 
-                                className="flex items-center gap-2.5 p-2 rounded-lg focus:bg-rose-500/10 text-rose-500 cursor-pointer text-[10px] font-bold"
-                              >
-                                <Trash2 size={14} /> Delete Invoice
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

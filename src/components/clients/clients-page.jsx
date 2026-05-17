@@ -237,9 +237,6 @@ export default function ClientsPage({ userRole }) {
                               <DropdownMenuItem onClick={() => { setEditingClient(client); setIsModalOpen(true); }} className="flex items-center gap-2 p-1.5 rounded-lg focus:bg-white/5 cursor-pointer text-[9px] font-bold">
                                 <Edit size={13} className="text-amber-400" /> Edit Client
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => navigate("/invoices", { state: { clientName: client.name } })} className="flex items-center gap-2 p-1.5 rounded-lg focus:bg-white/5 cursor-pointer text-[9px] font-bold">
-                                <Plus size={13} className="text-indigo-400" /> Create Invoice
-                              </DropdownMenuItem>
                               <DropdownMenuSeparator className="bg-white/5 my-1" />
                               {(userRole === "Owner" || userRole === "Admin") && (
                                 <DropdownMenuItem onClick={() => handleDelete(client._id)} className="flex items-center gap-2 p-1.5 rounded-lg focus:bg-rose-500/10 text-rose-500 cursor-pointer text-[9px] font-bold">

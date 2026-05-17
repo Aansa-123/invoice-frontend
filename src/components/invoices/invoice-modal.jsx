@@ -350,7 +350,8 @@ export default function InvoiceModal({
                   required
                   value={formData.dueDate}
                   onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                  className="w-full h-11 pl-10 pr-4 bg-white/[0.03] border border-white/[0.05] rounded-2xl text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-purple-500/30 transition-all"
+                  onClick={(e) => e.target.showPicker?.()}
+                  className="w-full h-11 pl-10 pr-4 bg-white/[0.03] border border-white/[0.05] rounded-2xl text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-purple-500/30 transition-all cursor-pointer"
                 />
               </div>
             </div>

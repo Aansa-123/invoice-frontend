@@ -26,6 +26,7 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, onInvoiceUp
         dueDate: invoice.dueDate?.split("T")[0] || "",
         status: invoice.status || "Draft",
         notes: invoice.notes || "",
+        isDraft: invoice.isDraft || false,
       })
     }
   }, [isOpen, invoice])
@@ -104,6 +105,7 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, onInvoiceUp
         ...formData,
         items: validItems,
         status: "Pending",
+        isDraft: false, // Always finalize when saving from Edit/Generate
       }
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/invoices/${invoice._id}`, {
         method: "PUT",
@@ -177,13 +179,15 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, onInvoiceUp
           <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
               <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Line Items</h3>
-              <button
-                type="button"
-                onClick={() => setFormData({ ...formData, items: [...formData.items, { name: "", quantity: 1, price: 0 }] })}
-                className="text-[10px] font-black text-purple-400 uppercase tracking-widest flex items-center gap-1.5 hover:text-purple-300 transition-colors"
-              >
-                <Plus size={14} /> Add item
-              </button>
+              {!formData.isDraft && (
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, items: [...formData.items, { name: "", quantity: 1, price: 0 }] })}
+                  className="text-[10px] font-black text-purple-400 uppercase tracking-widest flex items-center gap-1.5 hover:text-purple-300 transition-colors"
+                >
+                  <Plus size={14} /> Add item
+                </button>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -280,7 +284,7 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, onInvoiceUp
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Issue Date</label>
               <div className="relative">
-                <Calendar size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" />
+                <Calendar size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" />
                 <input
                   type="date"
                   value={formData.invoiceDate}
@@ -292,13 +296,14 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, onInvoiceUp
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">Due Date</label>
               <div className="relative">
-                <Calendar size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" />
+                <Calendar size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" />
                 <input
                   type="date"
                   required
                   value={formData.dueDate}
                   onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                  className="w-full h-11 pl-10 pr-4 bg-white/[0.03] border border-white/[0.05] rounded-2xl text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-purple-500/30 transition-all"
+                  onClick={(e) => e.target.showPicker?.()}
+                  className="w-full h-11 pl-10 pr-4 bg-white/[0.03] border border-white/[0.05] rounded-2xl text-xs font-bold text-white focus:outline-none focus:ring-1 focus:ring-purple-500/30 transition-all cursor-pointer"
                 />
               </div>
             </div>
@@ -360,7 +365,7 @@ export default function EditInvoiceModal({ isOpen, onClose, invoice, onInvoiceUp
               disabled={loading}
               className="px-8 h-9 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 text-white font-black text-[9px] uppercase tracking-widest shadow-xl shadow-purple-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale"
             >
-              {loading ? "Updating..." : "Update Invoice"}
+              {loading ? "Updating..." : formData.isDraft ? "Generate Invoice" : "Update Invoice"}
             </button>
           </div>
         </div>

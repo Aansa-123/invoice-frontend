@@ -3,7 +3,7 @@ import { useState, useEffect } from "react"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { Building2, FileText, Lock, Upload, ShieldCheck, Globe, Mail, Phone, MapPin, Save, Check } from "lucide-react"
+import { Building2, FileText, Lock, Upload, ShieldCheck, Globe, Mail, Phone, MapPin, Save, Check, X } from "lucide-react"
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("business")
@@ -18,7 +18,10 @@ export default function SettingsPage() {
     taxPercentage: 0,
     defaultNotes: "Thank you for your business",
     paymentTerms: "Due on Receipt",
+    categories: ["General"],
   })
+  
+  const [newCategory, setNewCategory] = useState("")
   
   const [showSuccess, setShowSuccess] = useState(false)
   
@@ -309,6 +312,57 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5 md:col-span-2">
+                      <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Product Categories</label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={newCategory}
+                          onChange={(e) => setNewCategory(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              if (newCategory.trim()) {
+                                setSettings({ ...settings, categories: [...(settings.categories || []), newCategory.trim()] });
+                                setNewCategory("");
+                              }
+                            }
+                          }}
+                          placeholder="Add new category (e.g. Beverages)"
+                          className="bg-[#0B0B1E]/50 border-white/[0.05] h-10 rounded-xl text-xs font-bold text-white flex-1"
+                        />
+                        <Button 
+                          type="button"
+                          onClick={() => {
+                            if (newCategory.trim()) {
+                              setSettings({ ...settings, categories: [...(settings.categories || []), newCategory.trim()] });
+                              setNewCategory("");
+                            }
+                          }}
+                          className="h-10 px-4 bg-[#A855F7] hover:bg-[#A855F7]/80 text-white rounded-xl text-[10px] font-bold"
+                        >
+                          Add
+                        </Button>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {(settings.categories || []).map((cat, idx) => (
+                          <div key={idx} className="flex items-center gap-2 bg-[#0B0B1E] border border-white/5 px-3 py-1.5 rounded-lg group transition-all hover:border-[#A855F7]/30">
+                            <span className="text-[10px] font-bold text-white/80">{cat}</span>
+                            <button 
+                              type="button"
+                              onClick={() => {
+                                const newCats = settings.categories.filter((_, i) => i !== idx);
+                                setSettings({ ...settings, categories: newCats });
+                              }}
+                              className="text-[#94A3B8] hover:text-rose-400 transition-colors"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-[#94A3B8] uppercase tracking-widest ml-1">Default Currency</label>
                       <select

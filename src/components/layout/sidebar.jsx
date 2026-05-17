@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { 
   LayoutDashboard, FileText, Users, Settings, X, CreditCard, 
   BarChart3, Users2, History, Shield, Database, Activity, 
-  Package, Building2, Banknote, Plus, ChevronDown, Check, ShieldCheck, Lock
+  Package, Building2, Banknote, Plus, ChevronDown, Check, ShieldCheck, Lock,
+  ShoppingCart
 } from "lucide-react"
 import { 
   DropdownMenu, 
@@ -23,6 +24,8 @@ const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
   { id: "invoices", label: "Invoices", icon: FileText, path: "/invoices" },
   { id: "clients", label: "Clients", icon: Users, path: "/clients" },
+  { id: "stock", label: "Stock", icon: Package, path: "/stock" },
+  { id: "purchase", label: "Purchase", icon: ShoppingCart, path: "/purchase" },
   { id: "payments", label: "Payments", icon: CreditCard, path: "/payments" },
   { id: "reports", label: "Reports", icon: BarChart3, path: "/reports", pro: true },
   { id: "team", label: "Team", icon: Users2, path: "/team", pro: true },

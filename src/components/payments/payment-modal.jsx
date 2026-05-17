@@ -41,7 +41,8 @@ export default function PaymentModal({ isOpen, onClose, onPaymentRecorded, initi
 
       if (response.ok) {
         const data = await response.json()
-        const pendingInvoices = data.data.filter(inv => inv.status !== "Paid")
+        // Only show Pending invoices that are not drafts (Orders)
+        const pendingInvoices = data.data.filter(inv => inv.status === "Pending" && !inv.isDraft)
         setInvoices(pendingInvoices)
       }
     } catch (error) {

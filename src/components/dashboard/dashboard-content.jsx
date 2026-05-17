@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useOutletContext } from "react-router-dom"
 import { Card } from "../ui/card"
 import { Button } from "../ui/button"
-import { FileText, DollarSign, Clock, CheckCircle, ShieldAlert, Building2, RefreshCw, Users, BarChart3, TrendingUp, Plus } from "lucide-react"
+import { FileText, DollarSign, Clock, CheckCircle, ShieldAlert, Building2, RefreshCw, Users, BarChart3, TrendingUp, Plus, ShoppingCart } from "lucide-react"
 import Overview from "./overview"
 import RecentInvoices from "./recent-invoices"
 import StatCard from "./stat-card"
@@ -336,12 +336,16 @@ export default function DashboardContent() {
             <h3 className="text-[10px] font-black text-white uppercase tracking-tight mb-2.5">Quick Actions</h3>
             <div className="space-y-1.5">
               {[
-                { label: "Create invoice", sub: "Bill a client now", icon: FileText },
-                { label: "Add client", sub: "Save a new contact", icon: Users },
-                { label: "Record payment", sub: "Mark invoice paid", icon: DollarSign },
-                { label: "View reports", sub: "Pro feature", icon: BarChart3 },
+                { label: "Purchase item", sub: "Buy new stock", icon: ShoppingCart, path: "/purchase" },
+                { label: "Add client", sub: "Save a new contact", icon: Users, path: "/clients" },
+                { label: "Record payment", sub: "Mark invoice paid", icon: DollarSign, path: "/payments" },
+                { label: "View reports", sub: "Pro feature", icon: BarChart3, path: "/reports" },
               ].map((action) => (
-                <button key={action.label} className="w-full flex items-center justify-between p-2 rounded-xl bg-white/[0.02] border border-white/[0.03] hover:bg-white/[0.05] transition-all group">
+                <button 
+                  key={action.label} 
+                  onClick={() => navigate(action.path)}
+                  className="w-full flex items-center justify-between p-2 rounded-xl bg-white/[0.02] border border-white/[0.03] hover:bg-white/[0.05] transition-all group"
+                >
                   <div className="flex items-center gap-2">
                     <div className="p-1.5 rounded-lg bg-[#7B5BE4]/10 text-[#7B5BE4]">
                       <action.icon size={10} />

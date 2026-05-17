@@ -7,6 +7,8 @@ import LogoutPage from "./components/auth/logout-page"
 import SetupWizard from "./components/auth/setup-wizard"
 import DashboardContent from "./components/dashboard/dashboard-content"
 import InvoicesPage from "./components/invoices/invoices-page"
+import StockPage from "./components/stock/stock-page"
+import PurchasePage from "./components/purchase/purchase-page"
 import ClientsPage from "./components/clients/clients-page"
 import PaymentsPage from "./components/payments/payments-page"
 import ReportsPage from "./components/reports/reports-page"
@@ -169,6 +171,8 @@ export default function App() {
         <Route element={<ProtectedRoute isLoggedIn={isLoggedIn} isLoading={isLoading} hasOrg={hasOrg} role={userRole} globalRole={globalRole}><MainLayout userId={userId} orgId={orgId} userRole={userRole} userPlan={userPlan} isExpired={isExpired} graceDays={graceDays} /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardContent />} />
           <Route path="/invoices" element={<InvoicesPage userRole={userRole} />} />
+          <Route path="/stock" element={<StockPage userRole={userRole} />} />
+          <Route path="/purchase" element={<PurchasePage userRole={userRole} />} />
           <Route path="/payments" element={<PaymentsPage userRole={userRole} />} />
           <Route path="/clients" element={<ClientsPage userRole={userRole} />} />
           <Route path="/reports" element={<ReportsPage userPlan={userPlan} />} />
